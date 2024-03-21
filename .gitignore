@@ -1,0 +1,19 @@
+# Ignore compiled binaries
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+main
+
+# Ignore object files
+*.o
+*.obj
+
+# Ignore build directories
+/build/
+/bin/
+
+# Ignore editor-specific files
+.vscode/
+*.swp

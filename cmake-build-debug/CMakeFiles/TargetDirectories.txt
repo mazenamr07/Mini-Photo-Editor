@@ -1,0 +1,3 @@
+D:/Documents/.Random Shit/CRF/CS112 Assignments/Assignment 3/Mini-Photo-Editor/cmake-build-debug/CMakeFiles/Mini_Photo_Editor.dir
+D:/Documents/.Random Shit/CRF/CS112 Assignments/Assignment 3/Mini-Photo-Editor/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Documents/.Random Shit/CRF/CS112 Assignments/Assignment 3/Mini-Photo-Editor/cmake-build-debug/CMakeFiles/rebuild_cache.dir
