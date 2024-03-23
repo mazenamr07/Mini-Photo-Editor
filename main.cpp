@@ -71,23 +71,48 @@ void Merge(Image img1, Image img2, float opacity, Image& mergedImg) {
     }
 }
 
-int main() {
-    if ("Merge notes to be added to menu") {
-//        Image img("img/fire.png");
-//        Image img2("img/moon.jpg");
-//
-//        Image tempImg1, tempImg2;
-//        string filename1, filename2;
-//        exChange(img, 1, ".jpg", filename1, tempImg1);
-//        exChange(img2, 2, ".bmp", filename2, tempImg2);
-//
-//        Image mergedImg(img.width, img.height);
-//        Merge(tempImg1, tempImg2, 0.5, mergedImg);
-//
-//        remove(filename1.c_str());
-//        remove(filename2.c_str());
-//
-//        mergedImg.saveImage("saved img/merged.jpg");
+void Brightness(Image img, float bright, Image& brightImg) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int bb = img(i, j, k) * bright;
+                if (bb > 255) {
+                    bb = 255;
+                }
+                brightImg(i, j, k) = bb;
+            }
+        }
     }
+}
+
+int main() {
     return 0;
+}
+
+void notes() {
+    if ("Brightness notes to be added to menu") {
+
+        // only works with .jpg bardo
+        Image img("img/moon.jpg"), bright(img.width, img.height);
+        Brightness(img, 2.5, bright); // 0 - 2 level
+        int i = bright.saveImage("saved img/at.png");
+        cout << i;
+    }
+    if ("Merge notes to be added to menu") {
+        Image img("img/fire.png");
+        Image img2("img/moon.jpg");
+
+        Image tempImg1, tempImg2;
+        string filename1, filename2;
+        exChange(img, 1, ".jpg", filename1, tempImg1);
+        exChange(img2, 2, ".bmp", filename2, tempImg2);
+
+        Image mergedImg(img.width, img.height);
+        Merge(tempImg1, tempImg2, 0.5, mergedImg);
+
+        remove(filename1.c_str());
+        remove(filename2.c_str());
+
+        mergedImg.saveImage("saved img/merged.jpg");
+    }
 }
