@@ -32,6 +32,15 @@ void menu() {
     imgRT270.saveImage("saved img/RT270frieren.jpg");
 }
 
+void exChange(Image img, int counter, const string& ex, string& filename, Image& jpgImg) {
+    filename = "temp/tempPic";
+    filename += to_string(counter);
+    filename += ex;
+    img.saveImage(filename);
+
+    jpgImg.loadNewImage(filename);
+}
+
 void GrayScale(Image img, Image& grayImg) {
     for (int i = 0; i < img.width; i++) {
         for (int j = 0; j < img.height; j++) {
@@ -49,13 +58,36 @@ void GrayScale(Image img, Image& grayImg) {
     }
 }
 
+void Merge(Image img1, Image img2, float opacity, Image& mergedImg) {
+    for (int i = 0; i < img1.width; i++) {
+        for (int j = 0; j < img1.height; j++) {
+
+            double color;
+            for (int k = 0; k < 3; k++) {
+                color = (1 - opacity) * img1(i, j, k) + opacity * img2(i, j, k);
+                mergedImg(i, j, k) = color;
+            }
+        }
+    }
+}
+
 int main() {
-    Image img("saved img/RT270frieren.jpg");
-
-    Image grayImg(img.width, img.height);
-    GrayScale(img, grayImg);
-
-    int x = grayImg.saveImage("saved img/gray_frieren.jpg");
-    cout << x;
+    if ("Merge notes to be added to menu") {
+//        Image img("img/fire.png");
+//        Image img2("img/moon.jpg");
+//
+//        Image tempImg1, tempImg2;
+//        string filename1, filename2;
+//        exChange(img, 1, ".jpg", filename1, tempImg1);
+//        exChange(img2, 2, ".bmp", filename2, tempImg2);
+//
+//        Image mergedImg(img.width, img.height);
+//        Merge(tempImg1, tempImg2, 0.5, mergedImg);
+//
+//        remove(filename1.c_str());
+//        remove(filename2.c_str());
+//
+//        mergedImg.saveImage("saved img/merged.jpg");
+    }
     return 0;
 }
