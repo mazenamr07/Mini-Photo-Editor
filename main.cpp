@@ -32,26 +32,30 @@ void menu() {
     imgRT270.saveImage("saved img/RT270frieren.jpg");
 }
 
-int main() {
-    Image img(250,250);
-
+void GrayScale(Image img, Image& grayImg) {
     for (int i = 0; i < img.width; i++) {
         for (int j = 0; j < img.height; j++) {
 
+            unsigned int grayAvg = 0;
             for (int k = 0; k < 3; k++) {
-                img(i, j, k) = 255;
+                grayAvg += img(i, j, k);
+            }
+
+            grayAvg /= 3;
+            for (int k = 0; k < 3; k++) {
+                grayImg(i, j, k) = grayAvg;
             }
         }
     }
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            img(i, j, 0) = 200;
-            img(i, j, 1) = 63;
-            img(i, j, 2) = 154;
-        }
-    }
+}
 
+int main() {
+    Image img("saved img/RT270frieren.jpg");
 
-    img.saveImage("saved img/cSquare.png");
+    Image grayImg(img.width, img.height);
+    GrayScale(img, grayImg);
+
+    int x = grayImg.saveImage("saved img/gray_frieren.jpg");
+    cout << x;
     return 0;
 }
