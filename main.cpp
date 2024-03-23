@@ -103,11 +103,23 @@ void EdgeDetect(Image grayedImg, Image& edgeImg) {
     }
 }
 
+void InvertColor(Image myimage, Image& img){
+    for (int i=0;i<myimage.width;i++)
+    {
+        for (int j=0;j<myimage.height;j++)
+        {
+            for (int k=0;k<myimage.channels;k++)
+            {
+                img(i,j,k)=255-myimage(i,j,k);
+            }
+        }
+    }
+}
+
 int main() {
-    Image img("img/photographer.jpg"), img2(img.width, img.height);
-    EdgeDetect(img, img2);
-    int i = img2.saveImage("saved img/gray123.jpg");
-    cout << i;
+    Image img("img/frieren.jpg"), img2(img.width, img.height);
+    InvertColor(img, img2);
+    img2.saveImage("saved img/invert_frieren.jpg");
 
     return 0;
 }
