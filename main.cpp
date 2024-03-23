@@ -85,7 +85,30 @@ void Brightness(Image img, float bright, Image& brightImg) {
     }
 }
 
+void EdgeDetect(Image grayedImg, Image& edgeImg) {
+    for (int i = 0; i < grayedImg.width; i++) {
+        for (int j = 0; j < grayedImg.height; j++) {
+            if (grayedImg(i + 1, j, 0) - grayedImg(i, j, 0) > 10
+            or grayedImg(i, j + 1, 0) - grayedImg(i, j, 0) > 10) {
+                edgeImg(i, j, 0) = 0;
+                edgeImg(i, j, 1) = 0;
+                edgeImg(i, j, 2) = 0;
+            }
+            else {
+                edgeImg(i, j, 0) = 255;
+                edgeImg(i, j, 1) = 255;
+                edgeImg(i, j, 2) = 255;
+            }
+        }
+    }
+}
+
 int main() {
+    Image img("img/photographer.jpg"), img2(img.width, img.height);
+    EdgeDetect(img, img2);
+    int i = img2.saveImage("saved img/gray123.jpg");
+    cout << i;
+
     return 0;
 }
 
