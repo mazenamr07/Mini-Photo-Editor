@@ -1,35 +1,31 @@
-#include "Image_Class.h"
+#include <sstream>
 #include <vector>
+#include "Image_Class.h"
 
 using namespace std;
 
-void menu() {
-    vector<unsigned char> pixels;
-    Image img("img/frieren.jpg");
-    Image square(250, 250);
-    Image imgBro(720, 1080);
-    Image imgRT90(img.height, img.width);
-    Image imgRT270(img.height, img.width);
+bool choiceCheck(const string& choice) {
+    vector<string> choices = {"0", "1", "2", "3", "4", "5"};
 
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            for (int k = 0; k < 3; k++) {
-                imgBro(720 - i - 1, 1080 - j - 1, k) = img(i, j, k);
-                imgRT90(j, 720 - i - 1 ,k) = img(i, j, k);
-                imgRT270(1080 - j - 1, i ,k) = img(i, j, k);
-            }
+    for (const string& i : choices) {
+        if (choice == i) {
+            return true;
         }
     }
+    return false;
+}
 
-    square(125, 35, 0) = img(0, 0, 0);
-    square(125, 35, 1) = img(0, 0, 1);
-    square(125, 35, 2) = img(0, 0, 2);
-
-
-    square.saveImage("saved img/cSquare.png");
-    imgBro.saveImage("saved img/Mafggbombo.png");
-    imgRT90.saveImage("saved img/RTfrieren.jpg");
-    imgRT270.saveImage("saved img/RT270frieren.jpg");
+bool exCheck(const string& ex) {
+    if (ex == "png") {
+        return true;
+    } else if (ex == "jpg") {
+        return true;
+    } else if (ex == "jpeg") {
+        return true;
+    } else if (ex == "bmp") {
+        return true;
+    }
+    return false;
 }
 
 void exChange(Image img, int counter, const string& ex, string& filename, Image& jpgImg) {
@@ -116,11 +112,124 @@ void InvertColor(Image myimage, Image& img){
     }
 }
 
-int main() {
-    Image img("img/frieren.jpg"), img2(img.width, img.height);
-    InvertColor(img, img2);
-    img2.saveImage("saved img/invert_frieren.jpg");
+void imageRotate90(Image img, Image& rtImg) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                rtImg( img.height - 1 - j, i, k) = img(i, j, k);
+            }
+        }
+    }
+}
+void imageRotate180(Image img, Image& rtImg) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                rtImg( img.width - 1 - i, img.height - 1 - j, k) = img(i, j, k);
+            }
+        }
+    }
+}
+void imageRotate270(Image img, Image& rtImg) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                rtImg( j, img.width - 1 - i, k) = img(i, j, k);
+            }
+        }
+    }
+}
 
+void menu() {
+    cout << "Welcome to our mini photo editor.\n"
+            "(to start put your images in the cMake folder)\n" << endl;
+
+    string imgName, ex;
+    cout << "Enter the name of your image:" << endl << ">>";
+    getline(cin, imgName);
+
+    size_t dotPos = imgName.find('.');
+    ex = imgName.substr(dotPos + 1);
+
+    //Checking if file extension is valid
+    while (dotPos == string::npos or !exCheck(ex)) {
+        cout << "Error: unsupported file extension, enter file name again:"
+        << endl << ">>";
+
+        getline(cin, imgName);
+        dotPos = imgName.find('.');
+        ex = imgName.substr(dotPos + 1);
+    }
+
+    string choice_1;
+    cout << "\nWhich Filter would you like to apply?" << endl;
+    cout << "1- GrayScale\n"
+            "2- Merge Two Images\n"
+            "3- Adjust Brightness\n"
+            "4- Invert Color\n"
+            "5- **** ****\n"
+            "0- Exit Program\n" << ">>";
+    getline(cin, choice_1);
+
+    // checking if input is valid
+    while (!choiceCheck(choice_1)) {
+        cout << "Please select a valid option:\n" << ">>";
+        getline(cin, choice_1);
+    }
+
+    if (choice_1 == "0") { // Exiting Program
+        cout << "Bye bye!";
+        exit(0);
+    }
+
+    else if (choice_1 == "1") { // GrayScale
+        Image img(imgName), grayImg(img.width, img.height);
+        GrayScale(img, grayImg);
+
+        string choice_2;
+        cout << "Save changes in a new images or same image:\n"
+                "1- Adjust same image\n"
+                "2- Save to a new image\n"
+                ">>";
+
+        getline(cin, choice_2);
+        while (choice_2 != "1" and choice_2 != "2") {
+            cout << "Please select a valid option:\n" << ">>";
+            getline(cin, choice_2);
+        }
+
+        if (choice_2 == "1") {
+            grayImg.saveImage(imgName);
+        }
+        else {
+            string newName, newEx;
+            cout << "Enter the name of new image:" << endl << ">>";
+            getline(cin, newName);
+
+            dotPos = newName.find('.');
+            ex = newName.substr(dotPos + 1);
+
+            //Checking if file extension is valid
+            while (dotPos == string::npos or !exCheck(ex)) {
+                cout << "Error: unsupported file extension, enter file name again:"
+                     << endl << ">>";
+
+                getline(cin, newName);
+                dotPos = newName.find('.');
+                ex = newName.substr(dotPos + 1);
+            }
+
+            grayImg.saveImage(newName);
+        }
+    }
+
+    else if (choice_1 == "2") { // Merge Two Images
+
+    }
+}
+
+int main() {
+    menu();
     return 0;
 }
 
