@@ -1,4 +1,26 @@
-//
+// FCAI – Structured Programming – 2024 – Assignment 3 – Part 1
+// Program Name: CS112_A3_Part1_Section28_20230308_20230498_20230516.cpp
+// Program Description: Mini Photo Editor to apply various filters and adjustments on images:
+//                      1- Gray Scale,      2- Black & White,    3- Inverted Colors,       4- Merging Images
+//                      5- Flipping Images, 6- Rotating Images,  7- Adjusting Brightness,  8- Cropping Images
+//                      9- Adding Frames,  10- Edge Detection,  11- Resizing Images,      12- Blurring Images
+// Last Modification Date: 27/3/2024
+
+// Author 1: Mazen Amr Mohammed Morsy - ID: 20230308 - Section: 28 - Email: 11410120230308@stud.cu.edu.eg
+// Author 2: Youssef Saad Eldeen Ahmed - ID: 20230498 - Section: 28 - Email: Yoyosaad85@gmail.com
+// Author 3: Youssef Haysam Sadek - ID: 20230516 - Section: 28 - Email: Youssefhaysam@gmail.com
+// Teaching Assistant: Eman Essam
+
+// Who did what:
+//      Mazen Amr: Worked on the menu and code for:
+//                      1- Gray Scale, 4- Merging Images, 7- Brightness, 10- Edge Detection
+//      Youssef Saad: Worked on the code for:
+//                      2- Black & White, 5- Flipping Images, 8- Cropping Images, 11- Resizing Images
+//      Youssef Haysam: Worked on the code for:
+//                      3- Inverted Colors, 6- Rotating Images, 9- Adding Frames, 12- Blurring Images
+
+// Notes: Since Resizing function is still in-progress,
+//              the Merge function can't merge images with different dimensions
 
 #include <sstream>
 #include <vector>
@@ -19,6 +41,7 @@ void exChange(Image img, int counter, const string& ex, string& filename, Image&
 void GrayScale(Image img, Image& grayImg);
 
 // Function to apply Black & White filter
+void BlackWhite(Image grayImg, Image& bwImg);
 
 // Function to merge two images
 void Merge(Image img1, Image img2, float opacity, Image& mergedImg);
@@ -62,11 +85,13 @@ void menu() {
 
     string choice_1;
     cout << "\nWhich Filter would you like to apply?" << endl;
-    cout << "1- GrayScale\n"
-            "2- Merge Two Images\n"
-            "3- Adjust Brightness\n"
-            "4- Invert Color\n"
-            "5- **** ****\n"
+    cout << "1- Gray Scale\n"
+            "2- Black & White\n"
+            "3- Invert Colors\n"
+            "4- Merge Two Images\n"
+            "5- Flip Image\n"
+            "6- Rotate Image\n"
+            "7- Adjust Brightness\n"
             "0- Exit Program\n" << ">>";
     getline(cin, choice_1);
 
@@ -81,7 +106,7 @@ void menu() {
         exit(0);
     }
 
-    else if (choice_1 == "1") { // GrayScale
+    else if (choice_1 == "1") { // Gray Scale
         Image img(imgName), grayImg(img.width, img.height);
         GrayScale(img, grayImg);
 
@@ -122,7 +147,57 @@ void menu() {
         }
     }
 
-    else if (choice_1 == "2") { // Merge Two Images
+    else if (choice_1 == "2") { // Black & White
+        // First, we grayscale the image
+        Image img(imgName), grayImg(img.width, img.height);
+        GrayScale(img, grayImg);
+
+        // Then, we apply the filter
+        Image bwImg (img.width, img.height);
+        BlackWhite(grayImg, bwImg);
+
+        string choice_2;
+        cout << "Save changes in a new images or same image:\n"
+                "1- Adjust same image\n"
+                "2- Save to a new image\n"
+                ">>";
+
+        getline(cin, choice_2);
+        while (choice_2 != "1" and choice_2 != "2") {
+            cout << "Please select a valid option:\n" << ">>";
+            getline(cin, choice_2);
+        }
+
+        if (choice_2 == "1") {
+            bwImg.saveImage(imgName);
+        }
+        else {
+            string newName;
+            cout << "Enter the name of new image:" << endl << ">>";
+            getline(cin, newName);
+
+            dotPos = newName.find('.');
+            ex = newName.substr(dotPos + 1);
+
+            //Checking if file extension is valid
+            while (dotPos == string::npos or !exCheck(ex)) {
+                cout << "Error: unsupported file extension, enter file name again:"
+                     << endl << ">>";
+
+                getline(cin, newName);
+                dotPos = newName.find('.');
+                ex = newName.substr(dotPos + 1);
+            }
+
+            bwImg.saveImage(newName);
+        }
+    }
+
+    else if (choice_1 == "3") {
+
+    }
+
+    else if (choice_1 == "4") { // Merge Two Images
         string imgName_2;
         cout << "Enter the name of your second image:" << endl << ">>";
         getline(cin, imgName_2);
@@ -194,9 +269,18 @@ void menu() {
         }
     }
 
-    else if (choice_1 == "3") {
+    else if (choice_1 == "5") {
 
     }
+
+    else if (choice_1 == "6") {
+
+    }
+
+    else if (choice_1 == "7") {
+
+    }
+
 }
 
 int main() {
@@ -233,7 +317,7 @@ void notes() {
 }
 
 bool choiceCheck(const string& choice) {
-    vector<string> choices = {"0", "1", "2", "3", "4", "5"};
+    vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7"};
 
     for (const string& i : choices) {
         if (choice == i) {
@@ -274,6 +358,23 @@ void GrayScale(Image img, Image& grayImg) {
             grayAvg /= 3;
             for (int k = 0; k < 3; k++) {
                 grayImg(i, j, k) = grayAvg;
+            }
+        }
+    }
+}
+void BlackWhite(Image grayImg, Image& bwImg) {
+    for (int i = 0; i < grayImg.width; i++) {
+        for (int j = 0; j < grayImg.height; j++) {
+
+            int color;
+            if (grayImg(i, j, 0) > 135) {
+                color = 255;
+            }
+            else {
+                color = 0;
+            }
+            for (int k = 0; k < 3; k++) {
+                bwImg(i, j, k) = color;
             }
         }
     }
