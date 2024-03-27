@@ -83,7 +83,7 @@ void VerticalFlip(Image img, Image& flipImg) {
     }
 }
 
-void menu(Image& img) {
+void menu(Image& img, string fileName) {
     while (true) {
         string choice_1;
         cout << "\nWhich Filter would you like to apply?" << endl;
@@ -104,8 +104,42 @@ void menu(Image& img) {
         }
 
         if (choice_1 == "0") { // Exiting Program
-            img.saveImage("saved img/lolo.jpg");
-            cout << "Bye bye!";
+            string saveChoice;
+            cout << "Choose a saving method:\n"
+                    "1- Save to same file\n"
+                    "2- Save to a new file\n"
+                    ">>";
+            getline(cin, saveChoice);
+
+            while (saveChoice != "1" and saveChoice != "2") {
+                cout << "Please select a valid option:" << endl << ">>";
+                getline(cin, saveChoice);
+            }
+
+            if (saveChoice == "1") {
+                img.saveImage(fileName);
+            }
+            else {
+                string newName, newEx;
+                cout << "Enter the name of the new image: (e.g. image.png)" << endl << ">>";
+                getline(cin, newName);
+
+                size_t dotPos = newName.find('.');
+                newEx = newName.substr(dotPos + 1);
+
+                //Checking if file extension is valid
+                while (dotPos == string::npos or !exCheck(newEx)) {
+                    cout << "Error: unsupported file extension, enter file name again:"
+                         << endl << ">>";
+
+                    getline(cin, newName);
+                    dotPos = newName.find('.');
+                    newEx = newName.substr(dotPos + 1);
+                }
+                img.saveImage(newName);
+            }
+
+            cout << "All done... Bye bye!";
             exit(0);
         }
 
@@ -113,8 +147,9 @@ void menu(Image& img) {
         else if (choice_1 == "1") {
             Image grayImg(img.width, img.height);
             GrayScale(img, grayImg);
+            cout << "Filter " << choice_1 << " was applied." << endl;
 
-            menu(grayImg);
+            menu(grayImg, fileName);
         }
 
         // Black & White
@@ -126,16 +161,18 @@ void menu(Image& img) {
             // Then, we apply the filter
             Image bwImg (img.width, img.height);
             BlackWhite(grayImg, bwImg);
+            cout << "Filter " << choice_1 << " was applied." << endl;
 
-            menu(bwImg);
+            menu(bwImg, fileName);
         }
 
         // Inverted Colors
         else if (choice_1 == "3") {
             Image invertedImg(img.width, img.height);
             InvertColor(img, invertedImg);
+            cout << "Filter " << choice_1 << " was applied." << endl;
 
-            menu(invertedImg);
+            menu(invertedImg, fileName);
         }
 
         // Merge Two Images
@@ -173,8 +210,9 @@ void menu(Image& img) {
 
             remove(filename1.c_str());
             remove(filename2.c_str());
+            cout << "Filter " << choice_1 << " was applied." << endl;
 
-            menu(mergedImg);
+            menu(mergedImg, fileName);
         }
 
         // Flip Image
@@ -193,14 +231,16 @@ void menu(Image& img) {
             if (choiceFlip == "1") {
                 Image flipImg(img.width, img.height);
                 HorizontalFlip(img, flipImg);
+                cout << "Filter " << choice_1 << " was applied." << endl;
 
-                menu(flipImg);
+                menu(flipImg, fileName);
             }
             else {
                 Image flipImg(img.width, img.height);
                 VerticalFlip(img, flipImg);
+                cout << "Filter " << choice_1 << " was applied." << endl;
 
-                menu(flipImg);
+                menu(flipImg, fileName);
             }
         }
 
@@ -221,20 +261,23 @@ void menu(Image& img) {
             if (choiceDegree == "1") {
                 Image rtImg(img.height, img.width);
                 imageRotate90(img, rtImg);
+                cout << "Filter " << choice_1 << " was applied." << endl;
 
-                menu(rtImg);
+                menu(rtImg, fileName);
             }
             else if (choiceDegree == "2") {
                 Image rtImg(img.height, img.width);
                 imageRotate270(img, rtImg);
+                cout << "Filter " << choice_1 << " was applied." << endl;
 
-                menu(rtImg);
+                menu(rtImg, fileName);
             }
             else {
                 Image rtImg(img.width, img.height);
                 imageRotate180(img, rtImg);
+                cout << "Filter " << choice_1 << " was applied." << endl;
 
-                menu(rtImg);
+                menu(rtImg, fileName);
             }
         }
 
@@ -246,7 +289,7 @@ void menu(Image& img) {
 
             getline(cin, level);
             float fLevel = stof(level);
-            while (fLevel < 0 or fLevel > 2) {
+            while (fLevel < 0 or fLevel > 3) {
                 cout << "Level must be between 0 - 2, enter again:\n" << ">>";
                 getline(cin, level);
                 fLevel = stof(level);
@@ -254,8 +297,9 @@ void menu(Image& img) {
 
             Image brightImg(img.width, img.height);
             Brightness(img, fLevel, brightImg);
+            cout << "Filter " << choice_1 << " was applied." << endl;
 
-            menu(brightImg);
+            menu(brightImg, fileName);
         }
     }
 }
@@ -287,7 +331,8 @@ int main() {
     imgName[dotPos + 3] = 'g';
 
     Image img(imgName);
-    menu(img);
+    menu(img, imgName);
+    cout << "breaking";
     return 0;
 }
 
