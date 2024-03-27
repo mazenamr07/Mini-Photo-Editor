@@ -193,8 +193,45 @@ void menu() {
         }
     }
 
-    else if (choice_1 == "3") {
+    else if (choice_1 == "3") { // Inverted Colors
+        Image img(imgName), invertedImg(img.width, img.height);
+        InvertColor(img, invertedImg);
 
+        string choice_2;
+        cout << "Save changes in a new images or same image:\n"
+                "1- Adjust same image\n"
+                "2- Save to a new image\n"
+                ">>";
+
+        getline(cin, choice_2);
+        while (choice_2 != "1" and choice_2 != "2") {
+            cout << "Please select a valid option:\n" << ">>";
+            getline(cin, choice_2);
+        }
+
+        if (choice_2 == "1") {
+            invertedImg.saveImage(imgName);
+        }
+        else {
+            string newName;
+            cout << "Enter the name of new image:" << endl << ">>";
+            getline(cin, newName);
+
+            dotPos = newName.find('.');
+            ex = newName.substr(dotPos + 1);
+
+            //Checking if file extension is valid
+            while (dotPos == string::npos or !exCheck(ex)) {
+                cout << "Error: unsupported file extension, enter file name again:"
+                     << endl << ">>";
+
+                getline(cin, newName);
+                dotPos = newName.find('.');
+                ex = newName.substr(dotPos + 1);
+            }
+
+            invertedImg.saveImage(newName);
+        }
     }
 
     else if (choice_1 == "4") { // Merge Two Images
