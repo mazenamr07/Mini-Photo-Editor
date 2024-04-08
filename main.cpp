@@ -37,9 +37,6 @@ bool exCheck(const string& ex);
 // Function to change image extension
 void exChange(Image img, int counter, const string& ex, string& filename, Image& jpgImg);
 
-// Function to choose between same image or new image
-void saveChoice(Image img, string imgName);
-
 // Function to apply Gray scale filter
 void GrayScale(Image img, Image& grayImg);
 
@@ -64,24 +61,11 @@ void imageRotate180(Image img, Image& rtImg);
 void imageRotate270(Image img, Image& rtImg);
 
 // Functions to Flip an image
-void HorizontalFlip(Image img, Image& flipImg) {
-    for (int i = 0; i < img.width; ++i) {
-        for (int j = 0; j < img.height; ++j) {
-            for (int k = 0; k < 3; ++k) {
-                flipImg(i, j, k) = img(img.width - 1 - i, j, k);
-            }
-        }
-    }
-}
-void VerticalFlip(Image img, Image& flipImg) {
-    for (int i = 0; i < img.width; ++i) {
-        for (int j = 0; j < img.height; ++j) {
-            for (int k = 0; k < 3; ++k) {
-                flipImg(i, j, k) = img(i, img.height - 1 - j, k);
-            }
-        }
-    }
-}
+void HorizontalFlip(Image img, Image& flipImg);
+void VerticalFlip(Image img, Image& flipImg);
+
+// Function to blur an image
+void imageBlur(Image myImage, Image& blurImage, int slider);
 
 void menu(Image& img, string fileName) {
     while (true) {
@@ -332,8 +316,13 @@ int main() {
 
     Image img(imgName);
     menu(img, imgName);
-    cout << "breaking";
     return 0;
+}
+
+int smain() {
+    Image img("img/mountain.jpg"), blur(img.width, img.height);
+    imageBlur(img, blur, 5);
+    blur.saveImage("saved img/test.jpg");
 }
 
 bool choiceCheck(const string& choice) {
@@ -365,43 +354,6 @@ void exChange(Image img, int counter, const string& ex, string& filename, Image&
     img.saveImage(filename);
 
     jpgImg.loadNewImage(filename);
-}
-void saveChoice(Image img, string imgName) {
-    string choice_2;
-    cout << "Save changes in a new images or same image:\n"
-            "1- Adjust same image\n"
-            "2- Save to a new image\n"
-            ">>";
-
-    getline(cin, choice_2);
-    while (choice_2 != "1" and choice_2 != "2") {
-        cout << "Please select a valid option:\n" << ">>";
-        getline(cin, choice_2);
-    }
-
-    if (choice_2 == "1") {
-        img.saveImage(imgName);
-    }
-    else {
-        string newName, ex;
-        cout << "Enter the name of new image:" << endl << ">>";
-        getline(cin, newName);
-
-        size_t dotPos = newName.find('.');
-        ex = newName.substr(dotPos + 1);
-
-        //Checking if file extension is valid
-        while (dotPos == string::npos or !exCheck(ex)) {
-            cout << "Error: unsupported file extension, enter file name again:"
-                 << endl << ">>";
-
-            getline(cin, newName);
-            dotPos = newName.find('.');
-            ex = newName.substr(dotPos + 1);
-        }
-
-        img.saveImage(newName);
-    }
 }
 void GrayScale(Image img, Image& grayImg) {
     for (int i = 0; i < img.width; i++) {
@@ -513,6 +465,48 @@ void imageRotate270(Image img, Image& rtImg) {
         for (int j = 0; j < img.height; j++) {
             for (int k = 0; k < 3; k++) {
                 rtImg( j, img.width - 1 - i, k) = img(i, j, k);
+            }
+        }
+    }
+}
+void HorizontalFlip(Image img, Image& flipImg) {
+    for (int i = 0; i < img.width; ++i) {
+        for (int j = 0; j < img.height; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                flipImg(i, j, k) = img(img.width - 1 - i, j, k);
+            }
+        }
+    }
+}
+void VerticalFlip(Image img, Image& flipImg) {
+    for (int i = 0; i < img.width; ++i) {
+        for (int j = 0; j < img.height; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                flipImg(i, j, k) = img(i, img.height - 1 - j, k);
+            }
+        }
+    }
+}
+void imageBlur(Image myImage, Image& blurImage, int slider = 1) {
+    for (int i = 0; i < myImage.width; i++) {
+        for (int j = 0; j < myImage.height; j++) {
+            for (int k = 0; k < myImage.channels; k++) {
+                int sum = 0;
+                int count = 0;
+
+                for (int x = -slider; x <= slider; x++) {
+                    for (int y = -slider; y <= slider; y++) {
+                        int new_i = i + x;
+                        int new_j = j + y;
+
+                        if (new_i >= 0 && new_i < myImage.width && new_j >= 0 && new_j < myImage.height) {
+                            sum += myImage(new_i, new_j, k);
+                            count++;
+                        }
+                    }
+                }
+
+                blurImage(i, j, k) = sum / count;
             }
         }
     }
