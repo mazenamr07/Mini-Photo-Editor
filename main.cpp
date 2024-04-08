@@ -65,7 +65,7 @@ void HorizontalFlip(Image img, Image& flipImg);
 void VerticalFlip(Image img, Image& flipImg);
 
 // Function to blur an image
-void imageBlur(Image myImage, Image& blurImage, int slider);
+void imageBlur(Image myImage, Image& blurImage, int slider = 1);
 
 void menu(Image& img, string fileName) {
     while (true) {
@@ -78,6 +78,11 @@ void menu(Image& img, string fileName) {
                 "5- Flip Image\n"
                 "6- Rotate Image\n"
                 "7- Adjust Brightness\n"
+                "8- Crop Image\n"
+                "9- Add Frame to Image\n"
+                "10- Edge Detection\n"
+                "11- Resize Image\n"
+                "12- Blur Image\n"
                 "0- Save, Exit Program\n" << ">>";
         getline(cin, choice_1);
 
@@ -285,6 +290,15 @@ void menu(Image& img, string fileName) {
 
             menu(brightImg, fileName);
         }
+
+        // Blur Image
+        else if (choice_1 == "12") {
+            Image blurImg(img.width, img.height);
+            imageBlur(img, blurImg);
+            cout << "Filter " << choice_1 << " was applied." << endl;
+
+            menu(blurImg, fileName);
+        }
     }
 }
 
@@ -326,7 +340,7 @@ int smain() {
 }
 
 bool choiceCheck(const string& choice) {
-    vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
 
     for (const string& i : choices) {
         if (choice == i) {
@@ -487,7 +501,7 @@ void VerticalFlip(Image img, Image& flipImg) {
         }
     }
 }
-void imageBlur(Image myImage, Image& blurImage, int slider = 1) {
+void imageBlur(Image myImage, Image& blurImage, int slider) {
     for (int i = 0; i < myImage.width; i++) {
         for (int j = 0; j < myImage.height; j++) {
             for (int k = 0; k < myImage.channels; k++) {
