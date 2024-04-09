@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <vector>
+#include <cmath>
 #include "Image_Class.h"
 
 using namespace std;
@@ -49,8 +50,8 @@ void Merge(Image img1, Image img2, float opacity, Image& mergedImg);
 // Function to adjust an image brightness
 void Brightness(Image img, float bright, Image& brightImg);
 
-// Function to apply Edge Detect filter
-void EdgeDetect(Image grayedImg, Image& edgeImg);
+// Function to apply Edge Detection filter
+void EdgeDetect(Image blurGrayImg, Image& edgeImg);
 
 // Function to apply Inverted Colors filter
 void InvertColor(Image myimage, Image& img);
@@ -291,12 +292,26 @@ void menu(Image& img, string fileName) {
             menu(brightImg, fileName);
         }
 
+        // Edge Detection
+        else if (choice_1 == "10") {
+            Image grayImg(img.width, img.height);
+            Image blurImg(img.width, img.height);
+            Image edgeImg(img.width, img.height);
+
+            GrayScale(img, grayImg);
+            imageBlur(grayImg, blurImg);
+            EdgeDetect(blurImg, edgeImg);
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(edgeImg, fileName);
+        }
+
         // Blur Image
         else if (choice_1 == "12") {
             Image blurImg(img.width, img.height);
             imageBlur(img, blurImg);
-            cout << "Filter " << choice_1 << " was applied." << endl;
 
+            cout << "Filter " << choice_1 << " was applied." << endl;
             menu(blurImg, fileName);
         }
     }
@@ -334,9 +349,19 @@ int main() {
 }
 
 int smain() {
-    Image img("img/mountain.jpg"), blur(img.width, img.height);
-    imageBlur(img, blur, 5);
-    blur.saveImage("saved img/test.jpg");
+    Image img1("img/photographer.jpg");
+    Image gray(img1.width, img1.height);
+    Image blur(img1.width, img1.height);
+    Image edge(img1.width, img1.height);
+
+    GrayScale(img1, gray);
+    imageBlur(gray, blur);
+    EdgeDetect(blur, edge);
+
+    img1.saveImage("saved img/img_test.jpg");
+    gray.saveImage("saved img/gray_test.jpg");
+    blur.saveImage("saved img/blur_test.jpg");
+    edge.saveImage("saved img/edge_test.jpg");
 }
 
 bool choiceCheck(const string& choice) {
@@ -427,19 +452,44 @@ void Brightness(Image img, float bright, Image& brightImg) {
         }
     }
 }
-void EdgeDetect(Image grayedImg, Image& edgeImg) {
-    for (int i = 0; i < grayedImg.width; i++) {
-        for (int j = 0; j < grayedImg.height; j++) {
-            if (grayedImg(i + 1, j, 0) - grayedImg(i, j, 0) > 10
-                or grayedImg(i, j + 1, 0) - grayedImg(i, j, 0) > 10) {
-                edgeImg(i, j, 0) = 0;
-                edgeImg(i, j, 1) = 0;
-                edgeImg(i, j, 2) = 0;
-            }
-            else {
-                edgeImg(i, j, 0) = 255;
-                edgeImg(i, j, 1) = 255;
-                edgeImg(i, j, 2) = 255;
+void EdgeDetect(Image blurGrayImg, Image& edgeImg) {
+    for (int i = 0; i < blurGrayImg.width; i++) {
+        for (int j = 0; j < blurGrayImg.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int horizontalSum = 0;
+                int verticalSum = 0;
+
+                for (int x = -1; x <= 1; x++) {
+                    for (int y = -1; y <= 1; y++) {
+                        int ix = i + x;
+                        int jy = j + y;
+                        bool pixelExists = ix >= 0 && ix < blurGrayImg.width && jy >= 0 && jy < blurGrayImg.height;
+
+                        if (pixelExists) {
+                            // Horizontal Kernel
+                            if (y == 0) {
+                                horizontalSum += blurGrayImg(ix, jy, 0) * x * 2;
+                            }
+                            else {
+                                horizontalSum += blurGrayImg(ix, jy, 0) * x;
+                            }
+                            // Vertical Kernel
+                            if (x == 0) {
+                                verticalSum += blurGrayImg(ix, jy, 0) * y * -2;
+                            }
+                            else {
+                                verticalSum += blurGrayImg(ix, jy, 0) * y * -1;
+                            }
+                        }
+                    }
+                }
+                int magnitude = sqrt( pow(horizontalSum, 2) + pow(verticalSum, 2) );
+                if (magnitude > 30) {
+                    edgeImg(i, j, k) = 0;
+                }
+                else {
+                    edgeImg(i, j, k) = 255;
+                }
             }
         }
     }
