@@ -25,12 +25,17 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <random>
+#include <ctime>
 #include "Image_Class.h"
 
 using namespace std;
 
 // Function to check choice validity
 bool choiceCheck(const string& choice);
+
+// Function for generating random numbers
+int randomInRange(int min, int max);
 
 // Function to check image extension validity
 bool exCheck(const string& ex);
@@ -65,8 +70,11 @@ void imageRotate270(Image img, Image& rtImg);
 void HorizontalFlip(Image img, Image& flipImg);
 void VerticalFlip(Image img, Image& flipImg);
 
-// Function to blur an image
+// Function to Blur an image
 void imageBlur(Image myImage, Image& blurImage, int slider = 1);
+
+// Function to apply TV Noise filter
+void imageNoise(Image img, Image& noiseImg);
 
 void menu(Image& img, string fileName) {
     while (true) {
@@ -85,6 +93,7 @@ void menu(Image& img, string fileName) {
                 "11- Resize Image\n"
                 "12- Blur Image\n"
                 "13- Natural Sunlight\n"
+                "15- TV Noise Filter\n"
                 "0- Save, Exit Program\n" << ">>";
         getline(cin, choice_1);
 
@@ -335,6 +344,15 @@ void menu(Image& img, string fileName) {
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(brightImg, fileName);
         }
+
+        // TV Noise Filter
+        else if (choice_1 == "15") {
+            Image noiseImg(img.width, img.height);
+            imageNoise(img, noiseImg);
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(noiseImg, fileName);
+        }
     }
 }
 
@@ -370,23 +388,14 @@ int main() {
 }
 
 int smain() {
-    Image img("img/wano.jpg");
-    Image yellow(img.width, img.height);
-
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            yellow(i, j, 0) = 255; // 255
-            yellow(i, j, 1) = 191; // 191
-            yellow(i, j, 2) = 0; // 0
-        }
-    }
-    Image merge(img.width, img.height);
-    Merge(img, yellow, 0.15, merge); // 0.25
-
-    Image bright(img.width, img.height);
-    Brightness(merge, 1.1, bright); // 1.1
-
-    bright.saveImage("saved img/yellow.jpg");
+    clock_t start = clock();
+    Image img("img/colors.jpg");
+    Image res(img.width, img.height);
+    imageNoise(img, res);
+    res.saveImage("saved img/noise.jpg");
+    clock_t end = clock();
+    double duration = double(end - start) / CLOCKS_PER_SEC;
+    std::cout << "Time taken: " << duration << " seconds" << std::endl;
 }
 
 bool choiceCheck(const string& choice) {
@@ -398,6 +407,13 @@ bool choiceCheck(const string& choice) {
         }
     }
     return false;
+}
+random_device rd; // Initializing random number generator
+mt19937 gen(rd());
+
+int randomInRange(int min, int max) {
+    uniform_int_distribution<> dis(min, max);
+    return dis(gen);
 }
 bool exCheck(const string& ex) {
     if (ex == "png") {
@@ -599,4 +615,35 @@ void imageBlur(Image myImage, Image& blurImage, int slider) {
             }
         }
     }
+}
+void imageNoise(Image img, Image& noiseImg) {
+    Image noise(img.width, img.height);
+    for (int i = 0; i < img.width; i++) {
+        int counter = 0, subC = 0;
+        for (int j = 0; j < img.height; j++) {
+            int _pixel = randomInRange(0, 255);
+
+            if (counter > img.height/20) {
+                for (int k = 0; k < 3; k++) {
+                    int newP = _pixel - 30;
+                    if (newP < 0) {
+                        newP = 0;
+                    }
+                    noise(i, j, k) = newP;
+                }
+                if (subC > 5) {
+                    subC = 0;
+                    counter = 0;
+                }
+                subC++;
+                continue;
+            }
+
+            for (int k = 0; k < 3; k++) {
+                noise(i, j, k) = _pixel;
+            }
+            counter++;
+        }
+    }
+    Merge(img, noise, 0.15, noiseImg); // 0.15
 }
