@@ -329,7 +329,7 @@ void menu(Image& img, string fileName) {
                     yellowImg(i, j, 2) = 0;
                 }
             }
-            Merge(img, yellowImg, 0.15, mergeImg); // Merging adds the yellow color effect
+            Merge(img, yellowImg, 0.2, mergeImg); // Merging adds the yellow color effect
             Brightness(mergeImg, 1.1, brightImg); // Brightening the image for better results
 
             cout << "Filter " << choice_1 << " was applied." << endl;
