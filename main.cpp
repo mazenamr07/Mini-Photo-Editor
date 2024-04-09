@@ -84,6 +84,7 @@ void menu(Image& img, string fileName) {
                 "10- Edge Detection\n"
                 "11- Resize Image\n"
                 "12- Blur Image\n"
+                "13- Natural Sunlight\n"
                 "0- Save, Exit Program\n" << ">>";
         getline(cin, choice_1);
 
@@ -314,6 +315,26 @@ void menu(Image& img, string fileName) {
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(blurImg, fileName);
         }
+
+        // Natural Sunlight
+        else if (choice_1 == "13") {
+            Image yellowImg(img.width, img.height);
+            Image mergeImg(img.width, img.height);
+            Image brightImg(img.width, img.height);
+
+            for (int i = 0; i < img.width; i++) { // Creating yellow image with same dimensions
+                for (int j = 0; j < img.height; j++) {
+                    yellowImg(i, j, 0) = 255;
+                    yellowImg(i, j, 1) = 191;
+                    yellowImg(i, j, 2) = 0;
+                }
+            }
+            Merge(img, yellowImg, 0.15, mergeImg); // Merging adds the yellow color effect
+            Brightness(mergeImg, 1.1, brightImg); // Brightening the image for better results
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(brightImg, fileName);
+        }
     }
 }
 
@@ -349,19 +370,23 @@ int main() {
 }
 
 int smain() {
-    Image img1("img/photographer.jpg");
-    Image gray(img1.width, img1.height);
-    Image blur(img1.width, img1.height);
-    Image edge(img1.width, img1.height);
+    Image img("img/wano.jpg");
+    Image yellow(img.width, img.height);
 
-    GrayScale(img1, gray);
-    imageBlur(gray, blur);
-    EdgeDetect(blur, edge);
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            yellow(i, j, 0) = 255; // 255
+            yellow(i, j, 1) = 191; // 191
+            yellow(i, j, 2) = 0; // 0
+        }
+    }
+    Image merge(img.width, img.height);
+    Merge(img, yellow, 0.15, merge); // 0.25
 
-    img1.saveImage("saved img/img_test.jpg");
-    gray.saveImage("saved img/gray_test.jpg");
-    blur.saveImage("saved img/blur_test.jpg");
-    edge.saveImage("saved img/edge_test.jpg");
+    Image bright(img.width, img.height);
+    Brightness(merge, 1.1, bright); // 1.1
+
+    bright.saveImage("saved img/yellow.jpg");
 }
 
 bool choiceCheck(const string& choice) {
