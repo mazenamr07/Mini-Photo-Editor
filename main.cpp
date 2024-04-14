@@ -38,6 +38,7 @@
 #include <random>
 #include <ctime>
 #include <iomanip>
+#include <algorithm>
 #include <thread>
 #include <chrono>
 
@@ -56,8 +57,16 @@ int randomInRange(int min, int max);
 // Function to check image extension validity
 bool exCheck(const string& ex);
 
-// Function to change image extension
-void exChange(Image img, int counter, const string& ex, string& filename, Image& jpgImg);
+// Function to check if a string represents a float
+bool isFloat(const string& str) {
+    try {
+        size_t pos;
+        stof(str, &pos);
+        return pos == str.length();
+    } catch (...) {
+        return false;
+    }
+}
 
 // Function to apply Gray scale filter
 void GrayScale(Image img, Image& grayImg);
@@ -70,6 +79,9 @@ void Merge(Image img1, Image img2, float opacity, Image& mergedImg);
 
 // Function to adjust an image brightness
 void Brightness(Image img, float bright, Image& brightImg);
+
+// Function to crop an image
+void imageCrop(Image img, Image& cropImg, int x, int y, int x2, int y2);
 
 // Function to apply Edge Detection filter
 void EdgeDetect(Image blurGrayImg, Image& edgeImg);
@@ -157,7 +169,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
                 img.saveImage(newName);
             }
 
-            std::remove(fileName.c_str());
+            remove(fileName.c_str());
             cout << "All done... Bye bye!";
             exit(0);
         }
@@ -194,7 +206,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(invertedImg, fileName, oldName);
         }
 
-        // Merge Two Images // Needs work
+        // Merge Two Images // Needs resize and crop
         else if (choice_1 == "4") {
             string imgName_2, ex;
             cout << "Enter the name of your second image:" << endl << ">>";
@@ -203,32 +215,74 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             size_t dotPos = imgName_2.find('.');
             ex = imgName_2.substr(dotPos + 1);
 
-            //Checking if file extension is valid
-            while (dotPos == string::npos or !exCheck(ex)) {
-                cout << "Error: unsupported file extension, enter file name again:"
-                     << endl << ">>";
+            // Checking validity
+            while (true) {
+                bool extensionValid = true;
+                bool nameValid = true;
 
-                getline(cin, imgName_2);
-                dotPos = imgName_2.find('.');
-                ex = imgName_2.substr(dotPos + 1);
+                if (dotPos == string::npos or !exCheck(ex)) {
+                    extensionValid = false;
+                    goto SKIP;
+                }
+                try {
+                    Image img2(imgName_2);
+                }
+                catch (const invalid_argument& e) {
+                    nameValid = false;
+                }
+
+                SKIP:
+                if (extensionValid and nameValid) {
+                    break;
+                }
+
+                // Checking if file exists
+                else if (!nameValid) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    cout << "Error: enter file name again:"
+                         << endl << ">>";
+
+                    getline(cin, imgName_2);
+                    dotPos = imgName_2.find('.');
+                    ex = imgName_2.substr(dotPos + 1);
+                }
+
+                // Checking if file extension is valid
+                else {
+                    cout << "Error: unsupported file extension, enter file name again:"
+                         << endl << ">>";
+
+                    getline(cin, imgName_2);
+                    dotPos = imgName_2.find('.');
+                    ex = imgName_2.substr(dotPos + 1);
+                }
             }
 
             Image img_2(imgName_2);
+
+            // Converting image to JPG
+            if (size(ex) > 3) {
+                imgName_2[dotPos + 1] = 'j';
+                imgName_2[dotPos + 2] = 'p';
+                imgName_2[dotPos + 3] = 'g';
+                imgName_2[dotPos + 4] = '\0';
+            }
+            else {
+                imgName_2[dotPos + 1] = 'j';
+                imgName_2[dotPos + 2] = 'p';
+                imgName_2[dotPos + 3] = 'g';
+            }
+            img_2.saveImage(imgName_2);
+
+            Image exImg_2(imgName_2);
 
             if (img.width != img_2.width or img.height != img_2.height) {
                 // should do resizing here
             }
 
-            Image tempImg1, tempImg2;
-            string filename1, filename2;
-            exChange(img, 1, ".jpg", filename1, tempImg1);
-            exChange(img_2, 2, ".jpg", filename2, tempImg2);
-
-            Image mergedImg(tempImg1.width, tempImg1.height);
-            Merge(tempImg1, tempImg2, 0.5, mergedImg);
-
-            remove(filename1.c_str());
-            remove(filename2.c_str());
+            Image mergedImg(img.width, img.height);
+            Merge(img, exImg_2, 0.5, mergedImg);
+            remove(imgName_2.c_str());
 
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(mergedImg, fileName, oldName);
@@ -308,33 +362,82 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             }
         }
 
-        // Adjust Brightness // Needs work
+        // Adjust Brightness
         else if (choice_1 == "7") {
             string level;
-            cout << "Please enter level of brightness: (0 is darkest, 1 is normal, 2 is brightest)"
+            cout << "Please enter level of brightness: (0 is darkest, 100 is normal, 200 is brightest)"
                  << endl << ">>";
-
             getline(cin, level);
-            float fLevel = stof(level);
-            while (fLevel < 0 or fLevel > 3) {
-                cout << "Level must be between 0 - 2, enter again:\n" << ">>";
+
+            while(!isFloat(level) or stof(level) < 0 or stof(level) > 200) {
+                cout << "Level must be between [0 - 200], enter again:\n" << ">>";
                 getline(cin, level);
-                fLevel = stof(level);
             }
 
+            float fLevel = stof(level);
+
             Image brightImg(img.width, img.height);
-            Brightness(img, fLevel, brightImg);
+            Brightness(img, fLevel / 100, brightImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(brightImg, fileName, oldName);
         }
 
-        // Crop Image // Needs work
+        // Crop Image
         else if (choice_1 == "8") {
+            string sXY, eXY;
+            int sX, eX, sY, eY;
+            char comma, comma2;
+            cout << "Please enter x,y of the starting pixel: (e.g. 50, 96)"
+                 << endl << ">>";
+            getline(cin, sXY);
+            bool strHasAlpha = any_of(sXY.begin(), sXY.end(), [](char i) {return isalpha(i);});
 
+            stringstream ss(sXY);
+            ss >> sX >> comma >> sY;
+
+            // Checking coordinates validity
+            while (comma != ',' or sX < 0 or sX > img.width or sY < 0 or sY > img.height or strHasAlpha) {
+                if (sX < 0 or sX > img.width or sY < 0 or sY > img.height) {
+                    cout << "Image boundaries exceeded, enter again:" << endl << ">>";
+                } else {
+                    cout << "Coordinates format is invalid, enter again:" << endl << ">>";
+                }
+                getline(cin, sXY);
+
+                stringstream sd(sXY);
+                sd >> sX >> comma >> sY;
+            }
+
+            cout << "Please enter x,y of the ending pixel: (e.g. 50, 96)"
+                 << endl << ">>";
+            getline(cin, eXY);
+            bool str2HasAlpha = any_of(eXY.begin(), eXY.end(), [](char i) {return isalpha(i);});
+
+            stringstream ss2(eXY);
+            ss2 >> eX >> comma2 >> eY;
+
+            // Checking coordinates validity
+            while (comma2 != ',' or eX < 0 or eX > img.width or eY < 0 or eY > img.height or str2HasAlpha) {
+                if (eX < 0 or eX > img.width or eY < 0 or eY > img.height) {
+                    cout << "Image boundaries exceeded, enter again:" << endl << ">>";
+                } else {
+                    cout << "Coordinates format is invalid, enter again:" << endl << ">>";
+                }
+                getline(cin, eXY);
+
+                stringstream sd2(eXY);
+                sd2 >> eX >> comma2 >> eY;
+            }
+
+            Image cropImg(abs(sX - eX), abs(sY - eY));
+            imageCrop(img, cropImg, sX, sY, eX, eY);
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(cropImg, fileName, oldName);
         }
 
-        // Add Frame // Needs work
+        // Add Frame to Image // Needs work
         else if (choice_1 == "9") {
 
         }
@@ -358,7 +461,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
 
         }
 
-        // Blur Image
+        // Blur Image // Needs Work
         else if (choice_1 == "12") {
             Image blurImg(img.width, img.height);
             imageBlur(img, blurImg);
@@ -417,6 +520,7 @@ int main() {
     size_t dotPos = imgName.find('.');
     ex = imgName.substr(dotPos + 1);
 
+    // Checking validity
     while (true) {
         bool extensionValid = true;
         bool nameValid = true;
@@ -436,6 +540,8 @@ int main() {
         if (extensionValid and nameValid) {
             break;
         }
+
+        // Checking if file exists
         else if (!nameValid) {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             cout << "Error: enter file name again:"
@@ -444,7 +550,10 @@ int main() {
             getline(cin, imgName);
             dotPos = imgName.find('.');
             ex = imgName.substr(dotPos + 1);
-        } else {
+        }
+
+        // Checking if file extension is valid
+        else {
             cout << "Error: unsupported file extension, enter file name again:"
                  << endl << ">>";
 
@@ -456,8 +565,6 @@ int main() {
 
     Image img(imgName);
     string oldName = imgName;
-
-    cout << imgName << endl << oldName << endl;
 
     // Converting image to JPG
     if (size(ex) > 3) {
@@ -472,8 +579,6 @@ int main() {
         imgName[dotPos + 3] = 'g';
     }
     img.saveImage(imgName);
-
-    cout << imgName;
 
     Image exImg(imgName);
     menu(exImg, imgName, oldName);
@@ -499,42 +604,57 @@ int pixelart() {
 int wmain() {
     clock_t start = clock();
 
-    Image img("img/doctor/night3.jpg");
-//    Image img("saved img/luggy.jpg");
-    Image blue(img.width, img.height);
-    Image red(img.width, img.height);
+    Image img("img/Wano.jpg");
 
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            for (int k = 0; k < 3; k++) {
-                int sum = 0;
+    string sXY, eXY;
+    int sX, eX, sY, eY;
+    char comma, comma2;
+    cout << "Please enter x,y of the starting pixel: (e.g. 50, 96)"
+         << endl << ">>";
+    getline(cin, sXY);
+    bool strHasAlpha = any_of(sXY.begin(), sXY.end(), [](char i) {return isalpha(i);});
 
-                for (int x = -1; x <= 1; x++) { // -1 0 1
-                    for (int y = -1; y <= 1; y++) { // -1 0 1
-                        int new_i = i + x;
-                        int new_j = j + y;
+    stringstream ss(sXY);
+    ss >> sX >> comma >> sY;
 
-                        if (new_i >= 0 && new_i < img.width && new_j >= 0 && new_j < img.height) {
-
-                            if (x == 0 and y == 0) {
-                                sum += img(new_i, new_j, k) * 5;
-                            }
-                            else if (x != 0 and y != 0) {
-                                sum += img(new_i, new_j, k) * 0;
-                            }
-                            else {
-                                sum += img(new_i, new_j, k) * -1;
-                            }
-                        }
-                    }
-                }
-
-                blue(i, j, k) = sum / 9;
-            }
+    // Checking coordinates validity
+    while (comma != ',' or sX < 0 or sX > img.width or sY < 0 or sY > img.height or strHasAlpha) {
+        if (sX < 0 or sX > img.width or sY < 0 or sY > img.height) {
+            cout << "Image boundaries exceeded, enter again:" << endl << ">>";
+        } else {
+            cout << "Coordinates format is invalid, enter again:" << endl << ">>";
         }
+        getline(cin, sXY);
+
+        stringstream sd(sXY);
+        sd >> sX >> comma >> sY;
     }
 
-    cout << blue.saveImage("saved img/luggy.jpg") << endl;
+    cout << "Please enter x,y of the ending pixel: (e.g. 50, 96)"
+         << endl << ">>";
+    getline(cin, eXY);
+    bool str2HasAlpha = any_of(eXY.begin(), eXY.end(), [](char i) {return isalpha(i);});
+
+    stringstream ss2(eXY);
+    ss2 >> eX >> comma2 >> eY;
+
+    // Checking coordinates validity
+    while (comma2 != ',' or eX < 0 or eX > img.width or eY < 0 or eY > img.height or str2HasAlpha) {
+        if (eX < 0 or eX > img.width or eY < 0 or eY > img.height) {
+            cout << "Image boundaries exceeded, enter again:" << endl << ">>";
+        } else {
+            cout << "Coordinates format is invalid, enter again:" << endl << ">>";
+        }
+        getline(cin, eXY);
+
+        stringstream sd2(eXY);
+        sd2 >> eX >> comma2 >> eY;
+    }
+
+    Image cropImg(abs(sX - eX), abs(sY - eY));
+    imageCrop(img, cropImg, sX, sY, eX, eY);
+
+    cout << cropImg.saveImage("saved img/croped.jpg");
 
     clock_t end = clock();
     double duration = double(end - start) / CLOCKS_PER_SEC;
@@ -827,6 +947,33 @@ void Brightness(Image img, float bright, Image& brightImg) {
                     bb = 255;
                 }
                 brightImg(i, j, k) = bb;
+            }
+        }
+    }
+}
+void imageCrop(Image img, Image& cropImg, int x, int y, int x2, int y2) {
+    int xStart, yStart;
+    int xEnd = abs(x - x2);
+    int yEnd = abs(y - y2);
+
+    if (x < x2) {
+        xStart = x;
+    }
+    else {
+        xStart = x2;
+    }
+
+    if (y < y2) {
+        yStart = y;
+    }
+    else {
+        yStart = y2;
+    }
+
+    for (int i = 0; i < xEnd; ++i) {
+        for (int j = 0; j < yEnd; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                cropImg(i, j, k) = img(xStart + i, yStart + j, k);
             }
         }
     }
