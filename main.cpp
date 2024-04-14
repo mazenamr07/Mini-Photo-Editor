@@ -37,7 +37,6 @@
 #include <vector>
 #include <cmath>
 #include <random>
-#include <ctime>
 #include <algorithm>
 #include <thread>
 #include <chrono>
@@ -211,7 +210,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(invertedImg, fileName, oldName);
         }
 
-        // Merge Two Images // Needs resize and crop
+        // Merge Two Images
         else if (choice_1 == "4") {
             string imgName_2, ex;
             cout << "Enter the name of your second image:" << endl << ">>";
@@ -264,6 +263,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             }
 
             Image img_2(imgName_2);
+            string oldName_2 = imgName_2;
 
             // Converting image to JPG
             if (size(ex) > 3) {
@@ -281,13 +281,114 @@ void menu(Image& img, const string& fileName, const string& oldName) {
 
             Image exImg_2(imgName_2);
 
-            if (img.width != img_2.width or img.height != img_2.height) {
-                // should do resizing here
+            if (img.width != exImg_2.width or img.height != exImg_2.height) {
+                string choiceMerge;
+                cout << "Images dimensions are not equal:\n"
+                        "1- Merge Common Part\n"
+                        "2- Resize the larger image\n"
+                        "3- Resize the smaller image" << endl << ">>";
+
+                getline(cin, choiceMerge);
+                while (choiceMerge != "1" and choiceMerge != "2" and choiceMerge != "3") {
+                    cout << "Please select a valid option:\n" << ">>";
+                    getline(cin, choiceMerge);
+                }
+
+                if (choiceMerge == "1") {
+                    int wDiff = img.width < exImg_2.width ? img.width : exImg_2.width;
+                    int hDiff = img.height < exImg_2.height ? img.height : exImg_2.height;
+
+                    Image mergedImg(wDiff, hDiff);
+                    Merge(img, exImg_2, 0.5, mergedImg);
+
+                    if (imgName_2 != oldName_2) {
+                        remove(imgName_2.c_str());
+                    }
+
+                    cout << "Filter " << choice_1 << " was applied." << endl;
+                    menu(mergedImg, fileName, oldName);
+                }
+                else if (choiceMerge == "2") {
+                    double wRatio, hRatio;
+                    if (img.width > exImg_2.width) {
+                        wRatio = (double)exImg_2.width / img.width;
+                        hRatio = (double)exImg_2.height / img.height;
+
+                        Image resImg(img.width * wRatio, img.height * hRatio);
+                        imageResize(img, resImg, wRatio, hRatio);
+
+                        Image mergedImg(exImg_2.width, exImg_2.height);
+                        Merge(resImg, exImg_2, 0.5, mergedImg);
+
+                        if (imgName_2 != oldName_2) {
+                            remove(imgName_2.c_str());
+                        }
+
+                        cout << "Filter " << choice_1 << " was applied." << endl;
+                        menu(mergedImg, fileName, oldName);
+                    }
+                    else {
+                        wRatio = (double)img.width / exImg_2.width;
+                        hRatio = (double)img.height / exImg_2.height;
+
+                        Image resImg(exImg_2.width * wRatio, exImg_2.height * hRatio);
+                        imageResize(exImg_2, resImg, wRatio, hRatio);
+
+                        Image mergedImg(img.width, img.height);
+                        Merge(resImg, img, 0.5, mergedImg);
+
+                        if (imgName_2 != oldName_2) {
+                            remove(imgName_2.c_str());
+                        }
+
+                        cout << "Filter " << choice_1 << " was applied." << endl;
+                        menu(mergedImg, fileName, oldName);
+                    }
+                }
+                else {
+                    double wRatio, hRatio;
+                    if (img.width < exImg_2.width) {
+                        wRatio = (double)exImg_2.width / img.width;
+                        hRatio = (double)exImg_2.height / img.height;
+
+                        Image resImg(img.width * wRatio, img.height * hRatio);
+                        imageResize(img, resImg, wRatio, hRatio);
+
+                        Image mergedImg(exImg_2.width, exImg_2.height);
+                        Merge(resImg, exImg_2, 0.5, mergedImg);
+
+                        if (imgName_2 != oldName_2) {
+                            remove(imgName_2.c_str());
+                        }
+
+                        cout << "Filter " << choice_1 << " was applied." << endl;
+                        menu(mergedImg, fileName, oldName);
+                    }
+                    else {
+                        wRatio = (double)img.width / exImg_2.width;
+                        hRatio = (double)img.height / exImg_2.height;
+
+                        Image resImg(exImg_2.width * wRatio, exImg_2.height * hRatio);
+                        imageResize(exImg_2, resImg, wRatio, hRatio);
+
+                        Image mergedImg(img.width, img.height);
+                        Merge(resImg, img, 0.5, mergedImg);
+
+                        if (imgName_2 != oldName_2) {
+                            remove(imgName_2.c_str());
+                        }
+
+                        cout << "Filter " << choice_1 << " was applied." << endl;
+                        menu(mergedImg, fileName, oldName);
+                    }
+                }
             }
 
             Image mergedImg(img.width, img.height);
             Merge(img, exImg_2, 0.5, mergedImg);
-            remove(imgName_2.c_str());
+            if (imgName_2 != oldName_2) {
+                remove(imgName_2.c_str());
+            }
 
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(mergedImg, fileName, oldName);
@@ -557,7 +658,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(blurImg, fileName, oldName);
         }
 
-        // Natural Sunlight Filter // Needs work in function
+        // Natural Sunlight Filter
         else if (choice_1 == "13") {
             Image sunImg(img.width, img.height);
             NaturalSunlight(img, sunImg);
@@ -566,13 +667,8 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(sunImg, fileName, oldName);
         }
 
-        // Oil Paint Filter // Needs work
+        // TV Noise Filter
         else if (choice_1 == "14") {
-
-        }
-
-        // TV Noise Filter // Needs work in function
-        else if (choice_1 == "15") {
             Image noiseImg(img.width, img.height);
             imageNoise(img, noiseImg);
 
@@ -580,8 +676,8 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(noiseImg, fileName, oldName);
         }
 
-        // Infrared Light Filter // Needs work in function
-        else if (choice_1 == "17") {
+        // Infrared Light Filter
+        else if (choice_1 == "15") {
             Image infraredImg(img.width, img.height);
             InfraredLight(img, infraredImg);
 
@@ -589,8 +685,13 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(infraredImg, fileName, oldName);
         }
 
+        // Purple Color Filter // Needs work
+        else if (choice_1 == "16") {
+
+        }
+
         // Skew Image // Needs work
-        else if (choice_1 == "18") {
+        else if (choice_1 == "17") {
 
         }
     }
@@ -831,9 +932,9 @@ int wdmain() {
     size.saveImage("saved img/test.jpg");
 }
 
-void purple() {
+int purple() {
     // don't forget to time things
-    Image img("img/luffy.jpg");
+    Image img("img/doctor/luffy.jpg");
 
     for (int i = 0; i < img.width; i++) {
         for (int j = 0; j < img.height; j++) {
@@ -871,7 +972,7 @@ void purple() {
         }
     }
 
-    img.saveImage("saved img/test.jpg");
+    img.saveImage("saved img/noise.jpg");
 }
 
 bool choiceCheck(const string& choice) {
@@ -1142,18 +1243,11 @@ void imageNoise(Image img, Image& noiseImg) {
     for (int i = 0; i < img.width; i++) {
         int counter = 0, subC = 0;
         for (int j = 0; j < img.height; j++) {
-//            int _pixel = randomInRange(0, 255);
-//            int rChannel = randomInRange(0, 2);
 
-            if (i % 10 == 0) { // counter > img.height/30
+            if (j % 10 == 0) {
                 for (int k = 0; k < 3; k++) {
                     noise(i, j, k) = randomInRange(0, 180);
                 }
-//                int newP = _pixel - 30;
-//                if (newP < 0) {
-//                    newP = 0;
-//                }
-//                noise(i, j, rChannel) = newP;
 
                 if (subC > 5) {
                     subC = 0;
@@ -1163,7 +1257,6 @@ void imageNoise(Image img, Image& noiseImg) {
                 continue;
             }
 
-//            noise(i, j, rChannel) = _pixel + 30;
             for (int k = 0; k < 3; k++) {
                 noise(i, j, k) = randomInRange(0, 255);
             }
