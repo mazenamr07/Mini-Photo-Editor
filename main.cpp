@@ -1,10 +1,18 @@
-// FCAI – Structured Programming – 2024 – Assignment 3 – Part 1
+// FCAI – Structured Programming – 2024 – Assignment 3 – Part 2B
 // Program Name: CS112_A3_Part1_Section28_20230308_20230498_20230516.cpp
 // Program Description: Mini Photo Editor to apply various filters and adjustments on images:
-//                      1- Gray Scale,      2- Black & White,    3- Inverted Colors,       4- Merging Images
-//                      5- Flipping Images, 6- Rotating Images,  7- Adjusting Brightness,  8- Cropping Images
-//                      9- Adding Frames,  10- Edge Detection,  11- Resizing Images,      12- Blurring Images
-// Last Modification Date: 27/3/2024
+//                      1- Gray Scale                       11- Resizing Images
+//                      2- Black & White                    12- Blurring Images
+//                      3- Inverted Colors                  13- Natural Sunlight Filter
+//                      4- Merging Images                   14- Oil Paint Filter
+//                      5- Flipping Images                  15- TV Noise Filter
+//                      6- Rotating Images                  16-
+//                      7- Adjusting Brightness             17- Infrared Light Filter
+//                      8- Cropping Images                  18- Skewing Images by Degrees
+//                      9- Adding Frames to Images          19-
+//                      10- Edge Detection Filter           20-
+
+// Last Modification Date: 13/4/2024
 
 // Author 1: Mazen Amr Mohammed Morsy - ID: 20230308 - Section: 28 - Email: 11410120230308@stud.cu.edu.eg
 // Author 2: Youssef Saad Eldeen Ahmed - ID: 20230498 - Section: 28 - Email: Yoyosaad85@gmail.com
@@ -13,28 +21,36 @@
 
 // Who did what:
 //      Mazen Amr: Worked on the menu and code for:
-//                      1- Gray Scale, 4- Merging Images, 7- Brightness, 10- Edge Detection
+//                      1- Gray Scale, 4- Merging Images, 7- Adjusting Brightness, 10- Edge Detection Filter,
+//                      13- Natural Sunlight Filter, 15- TV Noise Filter, 17- Infrared Light Filter
+//
 //      Youssef Saad: Worked on the code for:
 //                      2- Black & White, 5- Flipping Images, 8- Cropping Images, 11- Resizing Images
+//
 //      Youssef Haysam: Worked on the code for:
-//                      3- Inverted Colors, 6- Rotating Images, 9- Adding Frames, 12- Blurring Images
+//                      3- Inverted Colors, 6- Rotating Images, 9- Adding Frames to Images, 12- Blurring Images,
+//                      18- Skewing Images by Degrees
 
-// Notes: Since Resizing function is still in-progress,
-//              the Merge function can't merge images with different dimensions
-
+#include "Image_Class.h"
 #include <sstream>
 #include <vector>
 #include <cmath>
 #include <random>
 #include <ctime>
-#include "Image_Class.h"
+#include <iomanip>
+#include <thread>
+#include <chrono>
 
 using namespace std;
+
+// Initializing random number generator
+random_device rd;
+mt19937 gen(rd());
 
 // Function to check choice validity
 bool choiceCheck(const string& choice);
 
-// Function for generating random numbers
+// Function to generate random numbers
 int randomInRange(int min, int max);
 
 // Function to check image extension validity
@@ -73,28 +89,30 @@ void VerticalFlip(Image img, Image& flipImg);
 // Function to Blur an image
 void imageBlur(Image myImage, Image& blurImage, int slider = 1);
 
+// Function to apply Natural Sunlight filter
+void NaturalSunlight(Image img, Image& sunImg);
+
 // Function to apply TV Noise filter
 void imageNoise(Image img, Image& noiseImg);
 
-void menu(Image& img, string fileName) {
+// Function to apply Infrared Light filter
+void InfraredLight(Image img, Image& infraredImg);
+
+void menu(Image& img, const string& fileName, const string& oldName) {
     while (true) {
         string choice_1;
         cout << "\nWhich Filter would you like to apply?" << endl;
-        cout << "1- Gray Scale\n"
-                "2- Black & White\n"
-                "3- Invert Colors\n"
-                "4- Merge Two Images\n"
-                "5- Flip Image\n"
-                "6- Rotate Image\n"
-                "7- Adjust Brightness\n"
-                "8- Crop Image\n"
-                "9- Add Frame to Image\n"
-                "10- Edge Detection\n"
-                "11- Resize Image\n"
-                "12- Blur Image\n"
-                "13- Natural Sunlight\n"
-                "15- TV Noise Filter\n"
-                "0- Save, Exit Program\n" << ">>";
+        printf("%-25s %-25s\n", "1- Gray Scale",         "11- Resize Image");
+        printf("%-25s %-25s\n", "2- Black & White",      "12- Blur Image");
+        printf("%-25s %-25s\n", "3- Invert Colors",      "13- Natural Sunlight Filter");
+        printf("%-25s %-25s\n", "4- Merge Two Images",   "14- Oil Paint Filter");
+        printf("%-25s %-25s\n", "5- Flip Image",         "15- TV Noise Filter");
+        printf("%-25s %-25s\n", "6- Rotate Image",       "");
+        printf("%-25s %-25s\n", "7- Adjust Brightness",  "");
+        printf("%-25s %-25s\n", "8- Crop Image",         "");
+        printf("%-25s %-25s\n", "9- Add Frame to Image", "");
+        printf("%-25s %-25s\n", "10- Edge Detection",    "");
+        cout << "0- Save, Exit Program\n" << ">>";
         getline(cin, choice_1);
 
         // checking if input is valid
@@ -117,7 +135,7 @@ void menu(Image& img, string fileName) {
             }
 
             if (saveChoice == "1") {
-                img.saveImage(fileName);
+                img.saveImage(oldName);
             }
             else {
                 string newName, newEx;
@@ -139,6 +157,7 @@ void menu(Image& img, string fileName) {
                 img.saveImage(newName);
             }
 
+            std::remove(fileName.c_str());
             cout << "All done... Bye bye!";
             exit(0);
         }
@@ -149,7 +168,7 @@ void menu(Image& img, string fileName) {
             GrayScale(img, grayImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(grayImg, fileName);
+            menu(grayImg, fileName, oldName);
         }
 
         // Black & White
@@ -163,7 +182,7 @@ void menu(Image& img, string fileName) {
             BlackWhite(grayImg, bwImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(bwImg, fileName);
+            menu(bwImg, fileName, oldName);
         }
 
         // Inverted Colors
@@ -172,10 +191,10 @@ void menu(Image& img, string fileName) {
             InvertColor(img, invertedImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(invertedImg, fileName);
+            menu(invertedImg, fileName, oldName);
         }
 
-        // Merge Two Images
+        // Merge Two Images // Needs work
         else if (choice_1 == "4") {
             string imgName_2, ex;
             cout << "Enter the name of your second image:" << endl << ">>";
@@ -212,7 +231,7 @@ void menu(Image& img, string fileName) {
             remove(filename2.c_str());
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(mergedImg, fileName);
+            menu(mergedImg, fileName, oldName);
         }
 
         // Flip Image
@@ -220,10 +239,11 @@ void menu(Image& img, string fileName) {
             string choiceFlip;
             cout << "Choose how to flip the image:\n"
                     "1- Horizontal Flip\n"
-                    "2- Vertical Flip" << endl << ">>";
+                    "2- Vertical Flip\n"
+                    "0- Return" << endl << ">>";
 
             getline(cin, choiceFlip);
-            while (choiceFlip != "1" and choiceFlip != "2") {
+            while (choiceFlip != "1" and choiceFlip != "2" and choiceFlip != "0") {
                 cout << "Please select a valid option:\n" << ">>";
                 getline(cin, choiceFlip);
             }
@@ -233,14 +253,17 @@ void menu(Image& img, string fileName) {
                 HorizontalFlip(img, flipImg);
 
                 cout << "Filter " << choice_1 << " was applied." << endl;
-                menu(flipImg, fileName);
+                menu(flipImg, fileName, oldName);
             }
-            else {
+            else if (choiceFlip == "2") {
                 Image flipImg(img.width, img.height);
                 VerticalFlip(img, flipImg);
 
                 cout << "Filter " << choice_1 << " was applied." << endl;
-                menu(flipImg, fileName);
+                menu(flipImg, fileName, oldName);
+            }
+            else {
+                continue;
             }
         }
 
@@ -250,10 +273,11 @@ void menu(Image& img, string fileName) {
             cout << "Choose how to rotate the image:\n"
                     "1- 90 Degrees to the right\n"
                     "2- 90 Degrees to the left\n"
-                    "3- 180 Degrees" << endl << ">>";
+                    "3- 180 Degrees\n"
+                    "0- Return" << endl << ">>";
 
             getline(cin, choiceDegree);
-            while (choiceDegree != "1" and choiceDegree != "2" and choiceDegree != "3") {
+            while (choiceDegree != "1" and choiceDegree != "2" and choiceDegree != "3" and choiceDegree != "0") {
                 cout << "Please select a valid option:\n" << ">>";
                 getline(cin, choiceDegree);
             }
@@ -263,28 +287,31 @@ void menu(Image& img, string fileName) {
                 imageRotate90(img, rtImg);
 
                 cout << "Filter " << choice_1 << " was applied." << endl;
-                menu(rtImg, fileName);
+                menu(rtImg, fileName, oldName);
             }
             else if (choiceDegree == "2") {
                 Image rtImg(img.height, img.width);
                 imageRotate270(img, rtImg);
 
                 cout << "Filter " << choice_1 << " was applied." << endl;
-                menu(rtImg, fileName);
+                menu(rtImg, fileName, oldName);
             }
-            else {
+            else if (choiceDegree == "3") {
                 Image rtImg(img.width, img.height);
                 imageRotate180(img, rtImg);
 
                 cout << "Filter " << choice_1 << " was applied." << endl;
-                menu(rtImg, fileName);
+                menu(rtImg, fileName, oldName);
+            }
+            else {
+                continue;
             }
         }
 
-        // Adjust Brightness
+        // Adjust Brightness // Needs work
         else if (choice_1 == "7") {
             string level;
-            cout << "Please enter level of brightness: (0 is darkest, 1 is normal, 3 is brightest)"
+            cout << "Please enter level of brightness: (0 is darkest, 1 is normal, 2 is brightest)"
                  << endl << ">>";
 
             getline(cin, level);
@@ -299,7 +326,17 @@ void menu(Image& img, string fileName) {
             Brightness(img, fLevel, brightImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(brightImg, fileName);
+            menu(brightImg, fileName, oldName);
+        }
+
+        // Crop Image // Needs work
+        else if (choice_1 == "8") {
+
+        }
+
+        // Add Frame // Needs work
+        else if (choice_1 == "9") {
+
         }
 
         // Edge Detection
@@ -313,7 +350,12 @@ void menu(Image& img, string fileName) {
             EdgeDetect(blurImg, edgeImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(edgeImg, fileName);
+            menu(edgeImg, fileName, oldName);
+        }
+
+        // Resize Image // Needs work
+        else if (choice_1 == "11") {
+
         }
 
         // Blur Image
@@ -322,36 +364,44 @@ void menu(Image& img, string fileName) {
             imageBlur(img, blurImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(blurImg, fileName);
+            menu(blurImg, fileName, oldName);
         }
 
-        // Natural Sunlight
+        // Natural Sunlight Filter // Needs work in function
         else if (choice_1 == "13") {
-            Image yellowImg(img.width, img.height);
-            Image mergeImg(img.width, img.height);
-            Image brightImg(img.width, img.height);
-
-            for (int i = 0; i < img.width; i++) { // Creating yellow image with same dimensions
-                for (int j = 0; j < img.height; j++) {
-                    yellowImg(i, j, 0) = 255;
-                    yellowImg(i, j, 1) = 191;
-                    yellowImg(i, j, 2) = 0;
-                }
-            }
-            Merge(img, yellowImg, 0.2, mergeImg); // Merging adds the yellow color effect
-            Brightness(mergeImg, 1.1, brightImg); // Brightening the image for better results
+            Image sunImg(img.width, img.height);
+            NaturalSunlight(img, sunImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(brightImg, fileName);
+            menu(sunImg, fileName, oldName);
         }
 
-        // TV Noise Filter
+        // Oil Paint Filter // Needs work
+        else if (choice_1 == "14") {
+
+        }
+
+        // TV Noise Filter // Needs work in function
         else if (choice_1 == "15") {
             Image noiseImg(img.width, img.height);
             imageNoise(img, noiseImg);
 
             cout << "Filter " << choice_1 << " was applied." << endl;
-            menu(noiseImg, fileName);
+            menu(noiseImg, fileName, oldName);
+        }
+
+        // Infrared Light Filter // Needs work in function
+        else if (choice_1 == "17") {
+            Image infraredImg(img.width, img.height);
+            InfraredLight(img, infraredImg);
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(infraredImg, fileName, oldName);
+        }
+
+        // Skew Image // Needs work
+        else if (choice_1 == "18") {
+
         }
     }
 }
@@ -367,39 +417,328 @@ int main() {
     size_t dotPos = imgName.find('.');
     ex = imgName.substr(dotPos + 1);
 
-    //Checking if file extension is valid
-    while (dotPos == string::npos or !exCheck(ex)) {
-        cout << "Error: unsupported file extension, enter file name again:"
-             << endl << ">>";
+    while (true) {
+        bool extensionValid = true;
+        bool nameValid = true;
 
-        getline(cin, imgName);
-        dotPos = imgName.find('.');
-        ex = imgName.substr(dotPos + 1);
+        if (dotPos == string::npos or !exCheck(ex)) {
+            extensionValid = false;
+            goto SKIP;
+        }
+        try {
+            Image img(imgName);
+        }
+        catch (const invalid_argument& e) {
+            nameValid = false;
+        }
+
+        SKIP:
+        if (extensionValid and nameValid) {
+            break;
+        }
+        else if (!nameValid) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            cout << "Error: enter file name again:"
+                 << endl << ">>";
+
+            getline(cin, imgName);
+            dotPos = imgName.find('.');
+            ex = imgName.substr(dotPos + 1);
+        } else {
+            cout << "Error: unsupported file extension, enter file name again:"
+                 << endl << ">>";
+
+            getline(cin, imgName);
+            dotPos = imgName.find('.');
+            ex = imgName.substr(dotPos + 1);
+        }
     }
 
-    // Converting image to JPG
-    imgName[dotPos + 1] = 'j';
-    imgName[dotPos + 2] = 'p';
-    imgName[dotPos + 3] = 'g';
-
     Image img(imgName);
-    menu(img, imgName);
+    string oldName = imgName;
+
+    cout << imgName << endl << oldName << endl;
+
+    // Converting image to JPG
+    if (size(ex) > 3) {
+        imgName[dotPos + 1] = 'j';
+        imgName[dotPos + 2] = 'p';
+        imgName[dotPos + 3] = 'g';
+        imgName[dotPos + 4] = '\0';
+    }
+    else {
+        imgName[dotPos + 1] = 'j';
+        imgName[dotPos + 2] = 'p';
+        imgName[dotPos + 3] = 'g';
+    }
+    img.saveImage(imgName);
+
+    cout << imgName;
+
+    Image exImg(imgName);
+    menu(exImg, imgName, oldName);
     return 0;
 }
 
-int smain() {
+int pixelart() {
+    Image img("img/doctor/night3.jpg");
+
+    for (int i = 2; i < img.width; i += 5) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int color = img(i, j, k);
+                img(i - 1, j, k) = color;
+                img(i - 2, j, k) = color;
+                img(i + 2, j, k) = color;
+                img(i + 1, j, k) = color;
+            }
+        }
+    }
+}
+
+int wmain() {
     clock_t start = clock();
-    Image img("img/colors.jpg");
-    Image res(img.width, img.height);
-    imageNoise(img, res);
-    res.saveImage("saved img/noise.jpg");
+
+    Image img("img/doctor/night3.jpg");
+//    Image img("saved img/luggy.jpg");
+    Image blue(img.width, img.height);
+    Image red(img.width, img.height);
+
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int sum = 0;
+
+                for (int x = -1; x <= 1; x++) { // -1 0 1
+                    for (int y = -1; y <= 1; y++) { // -1 0 1
+                        int new_i = i + x;
+                        int new_j = j + y;
+
+                        if (new_i >= 0 && new_i < img.width && new_j >= 0 && new_j < img.height) {
+
+                            if (x == 0 and y == 0) {
+                                sum += img(new_i, new_j, k) * 5;
+                            }
+                            else if (x != 0 and y != 0) {
+                                sum += img(new_i, new_j, k) * 0;
+                            }
+                            else {
+                                sum += img(new_i, new_j, k) * -1;
+                            }
+                        }
+                    }
+                }
+
+                blue(i, j, k) = sum / 9;
+            }
+        }
+    }
+
+    cout << blue.saveImage("saved img/luggy.jpg") << endl;
+
     clock_t end = clock();
     double duration = double(end - start) / CLOCKS_PER_SEC;
     std::cout << "Time taken: " << duration << " seconds" << std::endl;
 }
 
+int gmain() {
+    clock_t start = clock();
+
+    Image img("img/doctor/night3.jpg");
+    Image blue(img.width, img.height);
+    Image red(img.width, img.height);
+
+    int degree = img.height/36;
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+
+            unsigned int grayAvg = 0;
+            for (int k = 0; k < 3; k++) {
+                grayAvg += img(i, j, k);
+            }
+            grayAvg /= 3;
+
+            if (i < img.width - degree) {
+                blue(i + degree, j, 0) = 0;
+                blue(i + degree, j, 1) = grayAvg;
+                blue(i + degree, j, 2) = grayAvg;
+            }
+            if (i > degree) {
+                red(i - degree, j, 0) = 255;
+                red(i - degree, j, 1) = grayAvg;
+                red(i - degree, j, 2) = grayAvg;
+            }
+        }
+    }
+
+    Merge(img, blue, 0.35, img);
+    Merge(img, red, 0.12, img);
+
+    cout << img.saveImage("saved img/luggy.jpg") << endl;
+
+    clock_t end = clock();
+    double duration = double(end - start) / CLOCKS_PER_SEC;
+    std::cout << "Time taken: " << duration << " seconds" << std::endl;
+}
+
+int dmain() {
+    clock_t start = clock();
+
+    Image img("img/doctor/toy1.jpg");
+    Image res(img.width, img.height);
+
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int color = img(i, j, k);
+                int rColor = color;
+
+                // Blue Filter
+                if (k == 0) {color /= 2;} else if (k == 1) {color /= 2;} else {color *= 1.5;}
+
+                if (color > 255) {color = 255;} else if (color < 0) {color = 0;}
+                img(i, j, k) = color;
+
+                if (i < img.width - 100) {
+                    res(i + 100, j, k) = img(i, j, k);
+                }
+                res(i, j, k) = (1 - 0.3) * img(i, j, k) + 0.3 * res(i, j, k);
+
+                // Red Filter
+                if (k == 2) {rColor /= 2;} else if (k == 1) {rColor /= 2;} else {rColor *= 2;}
+
+                if (rColor > 255) {rColor = 255;} else if (rColor < 0) {rColor = 0;}
+                img(i, j, k) = rColor;
+
+                if (i > img.width + 100) {
+                    res(i - 100, j, k) = img(i, j, k);
+                }
+                res(i, j, k) = (1 - 0.3) * img(i, j, k) + 0.3 * res(i, j, k);
+
+            }
+        }
+    }
+
+    cout << res.saveImage("saved img/luggy.jpg") << endl;
+
+    clock_t end = clock();
+    double duration = double(end - start) / CLOCKS_PER_SEC;
+    std::cout << "Time taken: " << duration << " seconds" << std::endl;
+}
+
+void skew() {
+    clock_t start = clock();
+
+    Image img("img/colors.jpg");
+
+    double angle, preAngle;
+    cin >> preAngle;
+
+    angle = preAngle * M_PI/180;
+    int nWidth = img.width + tan(angle) * img.height;
+    cout << tan(angle) * img.height << endl;
+
+    Image res(nWidth, img.height);
+
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+
+//                int new_i = i + j * tan(angle);
+                int new_i = (i + tan(angle) * img.height) - j * tan(angle);
+                if (new_i < 0) {
+                    new_i = 0;
+                }
+                res(new_i, j, k) = img(i, j, k);
+            }
+        }
+    }
+//    for (int i = img.width - 1; i >= 1; i--) {
+//        for (int j = 0; j < img.height; j++) {
+//            for (int k = 0; k < 3; k++) {
+//
+
+//                res(new_i, j, k) = img(i, j, k);
+//            }
+//        }
+//    }
+//    Image res2(res.width, res.height);
+//    HorizontalFlip(res, res2);
+
+    cout << res.saveImage("saved img/gogogaga.jpg") << endl;
+
+    clock_t end = clock();
+    double duration = double(end - start) / CLOCKS_PER_SEC;
+    std::cout << "Time taken: " << duration << " seconds" << std::endl;
+}
+
+void resize() {
+    double hRatio, wRatio;
+    cin >> hRatio >> wRatio;
+
+    Image img("img/mountain.jpg");
+    Image size(img.width * wRatio, img.height * hRatio);
+
+    double cWidth = 1.0 / wRatio;
+    double cHeight = 1.0 / hRatio;
+
+    for (int i = 0; i < size.width; i++) {
+        for (int j = 0; j < size.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                size(i, j, k) = img(i * cWidth, j * cHeight, k);
+            }
+        }
+    }
+
+    size.saveImage("saved img/test.jpg");
+}
+
+void purple() {
+    // don't forget to time things
+    Image img("img/luffy.jpg");
+
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+
+            int nRed = -(img(i, j, 0)/8) + img(i, j, 0);
+            nRed *= 1.2;
+            if (nRed > 255) {
+                nRed = 255;
+            } // -10
+            else if (nRed < 0) {
+                nRed = 0;
+            }
+
+            int nGreen = -(img(i, j, 1)/3) + img(i, j, 1);
+            nGreen *= 1.2;
+            if (nGreen > 255) {
+                nGreen = 255;
+            } // -50
+            else if (nGreen < 0) {
+                nGreen = 0;
+            }
+
+            int nBlue = -(img(i, j, 2)/10) + img(i, j, 2);
+            nBlue *= 1.4;
+            if (nBlue > 255) {
+                nBlue = 255;
+            } // -10
+            else if (nBlue < 0) {
+                nBlue = 0;
+            }
+
+            img(i, j, 0) = nRed;
+            img(i, j, 1) = nGreen;
+            img(i, j, 2) = nBlue;
+        }
+    }
+
+    img.saveImage("saved img/test.jpg");
+}
+
 bool choiceCheck(const string& choice) {
-    vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"};
+    vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+                              "11", "12", "13", "14", "15", "17", "18"};
 
     for (const string& i : choices) {
         if (choice == i) {
@@ -408,9 +747,6 @@ bool choiceCheck(const string& choice) {
     }
     return false;
 }
-random_device rd; // Initializing random number generator
-mt19937 gen(rd());
-
 int randomInRange(int min, int max) {
     uniform_int_distribution<> dis(min, max);
     return dis(gen);
@@ -423,6 +759,8 @@ bool exCheck(const string& ex) {
     } else if (ex == "jpeg") {
         return true;
     } else if (ex == "bmp") {
+        return true;
+    } else if (ex == "tga") {
         return true;
     }
     return false;
@@ -599,8 +937,8 @@ void imageBlur(Image myImage, Image& blurImage, int slider) {
                 int sum = 0;
                 int count = 0;
 
-                for (int x = -slider; x <= slider; x++) {
-                    for (int y = -slider; y <= slider; y++) {
+                for (int x = -slider; x <= slider; x++) { // -1 0 1
+                    for (int y = -slider; y <= slider; y++) { // -1 0 1
                         int new_i = i + x;
                         int new_j = j + y;
 
@@ -616,21 +954,38 @@ void imageBlur(Image myImage, Image& blurImage, int slider) {
         }
     }
 }
+void NaturalSunlight(Image img, Image& sunImg) {
+    Image yellowImg(img.width, img.height);
+    Image mergeImg(img.width, img.height);
+
+    for (int i = 0; i < img.width; i++) { // Creating yellow image with same dimensions
+        for (int j = 0; j < img.height; j++) {
+            yellowImg(i, j, 0) = 255;
+            yellowImg(i, j, 1) = 191;
+            yellowImg(i, j, 2) = 0;
+        }
+    }
+    Merge(img, yellowImg, 0.2, mergeImg); // Merging adds the yellow color effect
+    Brightness(mergeImg, 1.1, sunImg); // Brightening the image for better results
+}
 void imageNoise(Image img, Image& noiseImg) {
     Image noise(img.width, img.height);
     for (int i = 0; i < img.width; i++) {
         int counter = 0, subC = 0;
         for (int j = 0; j < img.height; j++) {
-            int _pixel = randomInRange(0, 255);
+//            int _pixel = randomInRange(0, 255);
+//            int rChannel = randomInRange(0, 2);
 
-            if (counter > img.height/20) {
+            if (i % 10 == 0) { // counter > img.height/30
                 for (int k = 0; k < 3; k++) {
-                    int newP = _pixel - 30;
-                    if (newP < 0) {
-                        newP = 0;
-                    }
-                    noise(i, j, k) = newP;
+                    noise(i, j, k) = randomInRange(0, 180);
                 }
+//                int newP = _pixel - 30;
+//                if (newP < 0) {
+//                    newP = 0;
+//                }
+//                noise(i, j, rChannel) = newP;
+
                 if (subC > 5) {
                     subC = 0;
                     counter = 0;
@@ -639,11 +994,30 @@ void imageNoise(Image img, Image& noiseImg) {
                 continue;
             }
 
+//            noise(i, j, rChannel) = _pixel + 30;
             for (int k = 0; k < 3; k++) {
-                noise(i, j, k) = _pixel;
+                noise(i, j, k) = randomInRange(0, 255);
             }
             counter++;
         }
     }
     Merge(img, noise, 0.15, noiseImg); // 0.15
+
+    noise.saveImage("saved img/noise.jpg");
+}
+void InfraredLight(Image img, Image& infraredImg) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+
+            unsigned int grayAvg = 0;
+            for (int k = 0; k < 3; k++) {
+                grayAvg += img(i, j, k);
+            }
+
+            grayAvg /= 3;
+            infraredImg(i, j, 0) = 255; // 0
+            infraredImg(i, j, 1) = 255 - grayAvg; // grayAvg
+            infraredImg(i, j, 2) = 255 - grayAvg; // grayAvg
+        }
+    }
 }
