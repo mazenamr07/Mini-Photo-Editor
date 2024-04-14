@@ -4,13 +4,13 @@
 //                      1- Gray Scale                       11- Resizing Images
 //                      2- Black & White                    12- Blurring Images
 //                      3- Inverted Colors                  13- Natural Sunlight Filter
-//                      4- Merging Images                   14- Oil Paint Filter
-//                      5- Flipping Images                  15- TV Noise Filter
-//                      6- Rotating Images                  16-
-//                      7- Adjusting Brightness             17- Infrared Light Filter
-//                      8- Cropping Images                  18- Skewing Images by Degrees
-//                      9- Adding Frames to Images          19-
-//                      10- Edge Detection Filter           20-
+//                      4- Merging Images                   14- TV Noise Filter
+//                      5- Flipping Images                  15- Infrared Light Filter
+//                      6- Rotating Images                  16- Purple Color Filter
+//                      7- Adjusting Brightness             17- Skewing Images by Degrees
+//                      8- Cropping Images
+//                      9- Adding Frames to Images
+//                      10- Edge Detection Filter
 
 // Last Modification Date: 13/4/2024
 
@@ -22,14 +22,15 @@
 // Who did what:
 //      Mazen Amr: Worked on the menu and code for:
 //                      1- Gray Scale, 4- Merging Images, 7- Adjusting Brightness, 10- Edge Detection Filter,
-//                      13- Natural Sunlight Filter, 15- TV Noise Filter, 17- Infrared Light Filter
+//                      13- Natural Sunlight Filter, 14- TV Noise Filter, 15- Infrared Light Filter
 //
 //      Youssef Saad: Worked on the code for:
 //                      2- Black & White, 5- Flipping Images, 8- Cropping Images, 11- Resizing Images
+//                      16- Purple Color Filter
 //
 //      Youssef Haysam: Worked on the code for:
 //                      3- Inverted Colors, 6- Rotating Images, 9- Adding Frames to Images, 12- Blurring Images,
-//                      18- Skewing Images by Degrees
+//                      17- Skewing Images by Degrees
 
 #include "Image_Class.h"
 #include <sstream>
@@ -37,7 +38,6 @@
 #include <cmath>
 #include <random>
 #include <ctime>
-#include <iomanip>
 #include <algorithm>
 #include <thread>
 #include <chrono>
@@ -98,6 +98,9 @@ void imageRotate270(Image img, Image& rtImg);
 void HorizontalFlip(Image img, Image& flipImg);
 void VerticalFlip(Image img, Image& flipImg);
 
+// Function to Resize an image
+void imageResize(Image img, Image& rezImg, double wRatio, double hRatio);
+
 // Function to Blur an image
 void imageBlur(Image myImage, Image& blurImage, int slider = 1);
 
@@ -117,10 +120,10 @@ void menu(Image& img, const string& fileName, const string& oldName) {
         printf("%-25s %-25s\n", "1- Gray Scale",         "11- Resize Image");
         printf("%-25s %-25s\n", "2- Black & White",      "12- Blur Image");
         printf("%-25s %-25s\n", "3- Invert Colors",      "13- Natural Sunlight Filter");
-        printf("%-25s %-25s\n", "4- Merge Two Images",   "14- Oil Paint Filter");
-        printf("%-25s %-25s\n", "5- Flip Image",         "15- TV Noise Filter");
-        printf("%-25s %-25s\n", "6- Rotate Image",       "");
-        printf("%-25s %-25s\n", "7- Adjust Brightness",  "");
+        printf("%-25s %-25s\n", "4- Merge Two Images",   "14- TV Noise Filter");
+        printf("%-25s %-25s\n", "5- Flip Image",         "15- Infrared Light Filter");
+        printf("%-25s %-25s\n", "6- Rotate Image",       "16- Purple Color Filter");
+        printf("%-25s %-25s\n", "7- Adjust Brightness",  "17- Skew Image by Degrees");
         printf("%-25s %-25s\n", "8- Crop Image",         "");
         printf("%-25s %-25s\n", "9- Add Frame to Image", "");
         printf("%-25s %-25s\n", "10- Edge Detection",    "");
@@ -169,7 +172,9 @@ void menu(Image& img, const string& fileName, const string& oldName) {
                 img.saveImage(newName);
             }
 
-            remove(fileName.c_str());
+            if (fileName != oldName) {
+                remove(fileName.c_str());
+            }
             cout << "All done... Bye bye!";
             exit(0);
         }
@@ -458,7 +463,77 @@ void menu(Image& img, const string& fileName, const string& oldName) {
 
         // Resize Image // Needs work
         else if (choice_1 == "11") {
+            string choiceResize;
+            cout << "Choose how to resize the image:\n"
+                    "1- Resize by Pixels\n"
+                    "2- Resize by Ratio Multipliers\n"
+                    "0- Return" << endl << ">>";
 
+            getline(cin, choiceResize);
+            while (choiceResize != "1" and choiceResize != "2" and choiceResize != "0") {
+                cout << "Please select a valid option:\n" << ">>";
+                getline(cin, choiceResize);
+            }
+
+            if (choiceResize == "0") {
+                continue;
+            }
+            else if (choiceResize == "1") {
+                string newWidth, newHeight;
+                cout << "Enter new width: (e.g. 1280 or 2560)" << endl << ">>";
+                getline(cin, newWidth);
+
+                bool notNumber = any_of(newWidth.begin(), newWidth.end(), [](char i) {return !isdigit(i);});
+
+                while (notNumber or newWidth.empty() or stoi(newWidth) < 1) {
+                    cout << "New width must be larger than 0, enter again:" << endl << ">>";
+                    getline(cin, newWidth);
+                    notNumber = any_of(newWidth.begin(), newWidth.end(), [](char i) {return !isdigit(i);});
+                }
+
+                cout << "Enter new height: (e.g. 1280 or 2560)" << endl << ">>";
+                getline(cin, newHeight);
+
+                notNumber = any_of(newHeight.begin(), newHeight.end(), [](char i) {return !isdigit(i);});
+
+                while (notNumber or newHeight.empty() or stoi(newHeight) < 1) {
+                    cout << "New height must be larger than 0, enter again:" << endl << ">>";
+                    getline(cin, newHeight);
+                    notNumber = any_of(newHeight.begin(), newHeight.end(), [](char i) {return !isdigit(i);});
+                }
+
+                double wRatio = stod(newWidth) / img.width;
+                double hRatio = stod(newHeight) / img.height;
+
+                Image rezImg(img.width * wRatio, img.height * hRatio);
+                imageResize(img, rezImg, wRatio, hRatio);
+                menu(rezImg, fileName, oldName);
+            }
+            else {
+                string wRatio, hRatio;
+                cout << "Enter width's ratio multiplier: (Half Original Width : 0.5, Original Width : 1, Double Original Width : 2, ...)" << endl << ">>";
+                getline(cin, wRatio);
+
+                while (!isFloat(wRatio) or stof(wRatio) <= 0) {
+                    cout << "Width's ratio multiplier must be larger than 0, enter again:" << endl << ">>";
+                    getline(cin, wRatio);
+                }
+
+                cout << "Enter height's ratio multiplier: (Half Original Height : 0.5, Original Height : 1, Double Original Height : 2, ...)" << endl << ">>";
+                getline(cin, hRatio);
+
+                while (!isFloat(hRatio) or stof(hRatio) <= 0) {
+                    cout << "Height's ratio multiplier must be larger than 0, enter again:" << endl << ">>";
+                    getline(cin, hRatio);
+                }
+
+                double xwRatio = stod(wRatio);
+                double xhRatio = stod(hRatio);
+
+                Image rezImg(img.width * xwRatio, img.height * xhRatio);
+                imageResize(img, rezImg, xwRatio, xhRatio);
+                menu(rezImg, fileName, oldName);
+            }
         }
 
         // Blur Image // Needs Work
@@ -601,66 +676,6 @@ int pixelart() {
     }
 }
 
-int wmain() {
-    clock_t start = clock();
-
-    Image img("img/Wano.jpg");
-
-    string sXY, eXY;
-    int sX, eX, sY, eY;
-    char comma, comma2;
-    cout << "Please enter x,y of the starting pixel: (e.g. 50, 96)"
-         << endl << ">>";
-    getline(cin, sXY);
-    bool strHasAlpha = any_of(sXY.begin(), sXY.end(), [](char i) {return isalpha(i);});
-
-    stringstream ss(sXY);
-    ss >> sX >> comma >> sY;
-
-    // Checking coordinates validity
-    while (comma != ',' or sX < 0 or sX > img.width or sY < 0 or sY > img.height or strHasAlpha) {
-        if (sX < 0 or sX > img.width or sY < 0 or sY > img.height) {
-            cout << "Image boundaries exceeded, enter again:" << endl << ">>";
-        } else {
-            cout << "Coordinates format is invalid, enter again:" << endl << ">>";
-        }
-        getline(cin, sXY);
-
-        stringstream sd(sXY);
-        sd >> sX >> comma >> sY;
-    }
-
-    cout << "Please enter x,y of the ending pixel: (e.g. 50, 96)"
-         << endl << ">>";
-    getline(cin, eXY);
-    bool str2HasAlpha = any_of(eXY.begin(), eXY.end(), [](char i) {return isalpha(i);});
-
-    stringstream ss2(eXY);
-    ss2 >> eX >> comma2 >> eY;
-
-    // Checking coordinates validity
-    while (comma2 != ',' or eX < 0 or eX > img.width or eY < 0 or eY > img.height or str2HasAlpha) {
-        if (eX < 0 or eX > img.width or eY < 0 or eY > img.height) {
-            cout << "Image boundaries exceeded, enter again:" << endl << ">>";
-        } else {
-            cout << "Coordinates format is invalid, enter again:" << endl << ">>";
-        }
-        getline(cin, eXY);
-
-        stringstream sd2(eXY);
-        sd2 >> eX >> comma2 >> eY;
-    }
-
-    Image cropImg(abs(sX - eX), abs(sY - eY));
-    imageCrop(img, cropImg, sX, sY, eX, eY);
-
-    cout << cropImg.saveImage("saved img/croped.jpg");
-
-    clock_t end = clock();
-    double duration = double(end - start) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << duration << " seconds" << std::endl;
-}
-
 int gmain() {
     clock_t start = clock();
 
@@ -792,23 +807,14 @@ void skew() {
     std::cout << "Time taken: " << duration << " seconds" << std::endl;
 }
 
-void resize() {
+int wdmain() {
     double hRatio, wRatio;
     cin >> hRatio >> wRatio;
 
     Image img("img/mountain.jpg");
     Image size(img.width * wRatio, img.height * hRatio);
 
-    double cWidth = 1.0 / wRatio;
-    double cHeight = 1.0 / hRatio;
-
-    for (int i = 0; i < size.width; i++) {
-        for (int j = 0; j < size.height; j++) {
-            for (int k = 0; k < 3; k++) {
-                size(i, j, k) = img(i * cWidth, j * cHeight, k);
-            }
-        }
-    }
+    imageResize(img, size, wRatio, hRatio);
 
     size.saveImage("saved img/test.jpg");
 }
@@ -884,14 +890,6 @@ bool exCheck(const string& ex) {
         return true;
     }
     return false;
-}
-void exChange(Image img, int counter, const string& ex, string& filename, Image& jpgImg) {
-    filename = "tempPic";
-    filename += to_string(counter);
-    filename += ex;
-    img.saveImage(filename);
-
-    jpgImg.loadNewImage(filename);
 }
 void GrayScale(Image img, Image& grayImg) {
     for (int i = 0; i < img.width; i++) {
@@ -1073,6 +1071,18 @@ void VerticalFlip(Image img, Image& flipImg) {
         for (int j = 0; j < img.height; ++j) {
             for (int k = 0; k < 3; ++k) {
                 flipImg(i, j, k) = img(i, img.height - 1 - j, k);
+            }
+        }
+    }
+}
+void imageResize(Image img, Image& rezImg, double wRatio, double hRatio) {
+    double cWidth = 1.0 / wRatio;
+    double cHeight = 1.0 / hRatio;
+
+    for (int i = 0; i < rezImg.width; i++) {
+        for (int j = 0; j < rezImg.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                rezImg(i, j, k) = img(i * cWidth, j * cHeight, k);
             }
         }
     }
