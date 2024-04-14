@@ -461,7 +461,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(edgeImg, fileName, oldName);
         }
 
-        // Resize Image // Needs work
+        // Resize Image
         else if (choice_1 == "11") {
             string choiceResize;
             cout << "Choose how to resize the image:\n"
@@ -536,10 +536,22 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             }
         }
 
-        // Blur Image // Needs Work
+        // Blur Image
         else if (choice_1 == "12") {
+            string blurLevel;
+            cout << "Enter Blur Level: [1 - 10: stronger blur takes more time]" << endl << ">>";
+            getline(cin, blurLevel);
+
+            bool isNumber = all_of(blurLevel.begin(), blurLevel.end(), [](char i) {return isdigit(i);});
+
+            while (blurLevel.empty() or !isNumber or stoi(blurLevel) < 1 or stoi(blurLevel) > 10) {
+                cout << "Blur Level must be between [1 - 10], enter again:" << endl << ">>";
+                getline(cin, blurLevel);
+                isNumber = all_of(blurLevel.begin(), blurLevel.end(), [](char i) {return isdigit(i);});
+            }
+
             Image blurImg(img.width, img.height);
-            imageBlur(img, blurImg);
+            imageBlur(img, blurImg, stoi(blurLevel));
 
             cout << "Filter " << choice_1 << " was applied." << endl;
             menu(blurImg, fileName, oldName);
