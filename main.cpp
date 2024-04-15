@@ -12,7 +12,7 @@
 //                      9- Adding Frames to Images
 //                      10- Edge Detection Filter
 
-// Last Modification Date: 13/4/2024
+// Last Modification Date: 14/4/2024
 
 // Author 1: Mazen Amr Mohammed Morsy - ID: 20230308 - Section: 28 - Email: 11410120230308@stud.cu.edu.eg
 // Author 2: Youssef Saad Eldeen Ahmed - ID: 20230498 - Section: 28 - Email: Yoyosaad85@gmail.com
@@ -97,6 +97,9 @@ void imageRotate270(Image img, Image& rtImg);
 void HorizontalFlip(Image img, Image& flipImg);
 void VerticalFlip(Image img, Image& flipImg);
 
+// Function to add Frames to an image
+void frameAdd(Image& img, int FrameSize, int redcolor, int greencolor, int bluecolor);
+
 // Function to Resize an image
 void imageResize(Image img, Image& rezImg, double wRatio, double hRatio);
 
@@ -111,6 +114,12 @@ void imageNoise(Image img, Image& noiseImg);
 
 // Function to apply Infrared Light filter
 void InfraredLight(Image img, Image& infraredImg);
+
+// Function to apply Purple Color filter
+void purpleColor(Image& img);
+
+// Function to Skew an image by degrees
+void skewImage(Image img, Image& skewImg, double preAngle, const string& direction);
 
 void menu(Image& img, const string& fileName, const string& oldName) {
     while (true) {
@@ -475,7 +484,7 @@ void menu(Image& img, const string& fileName, const string& oldName) {
                  << endl << ">>";
             getline(cin, level);
 
-            while(!isFloat(level) or stof(level) < 0 or stof(level) > 200) {
+            while(level.empty() or !isFloat(level) or stof(level) < 0 or stof(level) > 200) {
                 cout << "Level must be between [0 - 200], enter again:\n" << ">>";
                 getline(cin, level);
             }
@@ -543,9 +552,60 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(cropImg, fileName, oldName);
         }
 
-        // Add Frame to Image // Needs work
+        // Add Frame to Image
         else if (choice_1 == "9") {
+            string frameThickness, red, green, blue;
+            cout << "Enter desired frame thickness: [1 - 30]" << endl << ">>";
+            getline(cin, frameThickness);
 
+            bool isNumber = all_of(frameThickness.begin(), frameThickness.end(), [](char i) {return isdigit(i);});
+
+            while (frameThickness.empty() or !isNumber or stoi(frameThickness) < 1 or stoi(frameThickness) > 30) {
+                cout << "Frame thickness must be between [1 - 30], enter again:" << endl << ">>";
+                getline(cin, frameThickness);
+                isNumber = all_of(frameThickness.begin(), frameThickness.end(), [](char i) {return isdigit(i);});
+            }
+
+            // Red Color
+            cout << "Enter desired red color saturation: [0 - 255]" << endl << ">>";
+            getline(cin, red);
+
+            isNumber = all_of(red.begin(), red.end(), [](char i) {return isdigit(i);});
+
+            while (red.empty() or !isNumber or stoi(red) < 0 or stoi(red) > 255) {
+                cout << "Red color saturation must be between [0 - 255], enter again:" << endl << ">>";
+                getline(cin, red);
+                isNumber = all_of(red.begin(), red.end(), [](char i) {return isdigit(i);});
+            }
+
+            // Green Color
+            cout << "Enter desired green color saturation: [0 - 255]" << endl << ">>";
+            getline(cin, green);
+
+            isNumber = all_of(green.begin(), green.end(), [](char i) {return isdigit(i);});
+
+            while (green.empty() or !isNumber or stoi(green) < 0 or stoi(green) > 255) {
+                cout << "Green color saturation must be between [0 - 255], enter again:" << endl << ">>";
+                getline(cin, green);
+                isNumber = all_of(green.begin(), green.end(), [](char i) {return isdigit(i);});
+            }
+
+            // Blue Color
+            cout << "Enter desired blue color saturation: [0 - 255]" << endl << ">>";
+            getline(cin, blue);
+
+            isNumber = all_of(blue.begin(), blue.end(), [](char i) {return isdigit(i);});
+
+            while (blue.empty() or !isNumber or stoi(blue) < 0 or stoi(blue) > 255) {
+                cout << "Blue color saturation must be between [0 - 255], enter again:" << endl << ">>";
+                getline(cin, blue);
+                isNumber = all_of(blue.begin(), blue.end(), [](char i) {return isdigit(i);});
+            }
+
+            frameAdd(img, stoi(frameThickness), stoi(red), stoi(green), stoi(blue));
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(img, fileName, oldName);
         }
 
         // Edge Detection
@@ -685,14 +745,55 @@ void menu(Image& img, const string& fileName, const string& oldName) {
             menu(infraredImg, fileName, oldName);
         }
 
-        // Purple Color Filter // Needs work
+        // Purple Color Filter
         else if (choice_1 == "16") {
+            purpleColor(img);
 
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(img, fileName, oldName);
         }
 
-        // Skew Image // Needs work
+        // Skew Image
         else if (choice_1 == "17") {
+            string choiceSkew;
+            cout << "Choose how to skew the image:\n"
+                    "1- Left Skew\n"
+                    "2- Right Skew\n"
+                    "0- Return" << endl << ">>";
 
+            getline(cin, choiceSkew);
+            while (choiceSkew != "1" and choiceSkew != "2" and choiceSkew != "0") {
+                cout << "Please select a valid option:\n" << ">>";
+                getline(cin, choiceSkew);
+            }
+
+            if (choiceSkew == "0") {
+                continue;
+            }
+
+            string degree;
+            cout << "Please the skew degree: [1 - 89]"
+                 << endl << ">>";
+            getline(cin, degree);
+
+            while(degree.empty() or !isFloat(degree) or stof(degree) < 1 or stof(degree) > 89) {
+                cout << "Skew Degree must be between [1 - 89], enter again:\n" << ">>";
+                getline(cin, degree);
+            }
+
+            double fDegree = stof(degree);
+            double angle = fDegree * M_PI/180;
+            int nWidth = img.width + tan(angle) * img.height;
+            Image res(nWidth, img.height);
+
+            if (choiceSkew == "1") {
+                skewImage(img, res, angle, "left");
+            } else {
+                skewImage(img, res, angle, "right");
+            }
+
+            cout << "Filter " << choice_1 << " was applied." << endl;
+            menu(res, fileName, oldName);
         }
     }
 }
@@ -773,211 +874,9 @@ int main() {
     return 0;
 }
 
-int pixelart() {
-    Image img("img/doctor/night3.jpg");
-
-    for (int i = 2; i < img.width; i += 5) {
-        for (int j = 0; j < img.height; j++) {
-            for (int k = 0; k < 3; k++) {
-                int color = img(i, j, k);
-                img(i - 1, j, k) = color;
-                img(i - 2, j, k) = color;
-                img(i + 2, j, k) = color;
-                img(i + 1, j, k) = color;
-            }
-        }
-    }
-}
-
-int gmain() {
-    clock_t start = clock();
-
-    Image img("img/doctor/night3.jpg");
-    Image blue(img.width, img.height);
-    Image red(img.width, img.height);
-
-    int degree = img.height/36;
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-
-            unsigned int grayAvg = 0;
-            for (int k = 0; k < 3; k++) {
-                grayAvg += img(i, j, k);
-            }
-            grayAvg /= 3;
-
-            if (i < img.width - degree) {
-                blue(i + degree, j, 0) = 0;
-                blue(i + degree, j, 1) = grayAvg;
-                blue(i + degree, j, 2) = grayAvg;
-            }
-            if (i > degree) {
-                red(i - degree, j, 0) = 255;
-                red(i - degree, j, 1) = grayAvg;
-                red(i - degree, j, 2) = grayAvg;
-            }
-        }
-    }
-
-    Merge(img, blue, 0.35, img);
-    Merge(img, red, 0.12, img);
-
-    cout << img.saveImage("saved img/luggy.jpg") << endl;
-
-    clock_t end = clock();
-    double duration = double(end - start) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << duration << " seconds" << std::endl;
-}
-
-int dmain() {
-    clock_t start = clock();
-
-    Image img("img/doctor/toy1.jpg");
-    Image res(img.width, img.height);
-
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            for (int k = 0; k < 3; k++) {
-                int color = img(i, j, k);
-                int rColor = color;
-
-                // Blue Filter
-                if (k == 0) {color /= 2;} else if (k == 1) {color /= 2;} else {color *= 1.5;}
-
-                if (color > 255) {color = 255;} else if (color < 0) {color = 0;}
-                img(i, j, k) = color;
-
-                if (i < img.width - 100) {
-                    res(i + 100, j, k) = img(i, j, k);
-                }
-                res(i, j, k) = (1 - 0.3) * img(i, j, k) + 0.3 * res(i, j, k);
-
-                // Red Filter
-                if (k == 2) {rColor /= 2;} else if (k == 1) {rColor /= 2;} else {rColor *= 2;}
-
-                if (rColor > 255) {rColor = 255;} else if (rColor < 0) {rColor = 0;}
-                img(i, j, k) = rColor;
-
-                if (i > img.width + 100) {
-                    res(i - 100, j, k) = img(i, j, k);
-                }
-                res(i, j, k) = (1 - 0.3) * img(i, j, k) + 0.3 * res(i, j, k);
-
-            }
-        }
-    }
-
-    cout << res.saveImage("saved img/luggy.jpg") << endl;
-
-    clock_t end = clock();
-    double duration = double(end - start) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << duration << " seconds" << std::endl;
-}
-
-void skew() {
-    clock_t start = clock();
-
-    Image img("img/colors.jpg");
-
-    double angle, preAngle;
-    cin >> preAngle;
-
-    angle = preAngle * M_PI/180;
-    int nWidth = img.width + tan(angle) * img.height;
-    cout << tan(angle) * img.height << endl;
-
-    Image res(nWidth, img.height);
-
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            for (int k = 0; k < 3; k++) {
-
-//                int new_i = i + j * tan(angle);
-                int new_i = (i + tan(angle) * img.height) - j * tan(angle);
-                if (new_i < 0) {
-                    new_i = 0;
-                }
-                res(new_i, j, k) = img(i, j, k);
-            }
-        }
-    }
-//    for (int i = img.width - 1; i >= 1; i--) {
-//        for (int j = 0; j < img.height; j++) {
-//            for (int k = 0; k < 3; k++) {
-//
-
-//                res(new_i, j, k) = img(i, j, k);
-//            }
-//        }
-//    }
-//    Image res2(res.width, res.height);
-//    HorizontalFlip(res, res2);
-
-    cout << res.saveImage("saved img/gogogaga.jpg") << endl;
-
-    clock_t end = clock();
-    double duration = double(end - start) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << duration << " seconds" << std::endl;
-}
-
-int wdmain() {
-    double hRatio, wRatio;
-    cin >> hRatio >> wRatio;
-
-    Image img("img/mountain.jpg");
-    Image size(img.width * wRatio, img.height * hRatio);
-
-    imageResize(img, size, wRatio, hRatio);
-
-    size.saveImage("saved img/test.jpg");
-}
-
-int purple() {
-    // don't forget to time things
-    Image img("img/doctor/luffy.jpg");
-
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-
-            int nRed = -(img(i, j, 0)/8) + img(i, j, 0);
-            nRed *= 1.2;
-            if (nRed > 255) {
-                nRed = 255;
-            } // -10
-            else if (nRed < 0) {
-                nRed = 0;
-            }
-
-            int nGreen = -(img(i, j, 1)/3) + img(i, j, 1);
-            nGreen *= 1.2;
-            if (nGreen > 255) {
-                nGreen = 255;
-            } // -50
-            else if (nGreen < 0) {
-                nGreen = 0;
-            }
-
-            int nBlue = -(img(i, j, 2)/10) + img(i, j, 2);
-            nBlue *= 1.4;
-            if (nBlue > 255) {
-                nBlue = 255;
-            } // -10
-            else if (nBlue < 0) {
-                nBlue = 0;
-            }
-
-            img(i, j, 0) = nRed;
-            img(i, j, 1) = nGreen;
-            img(i, j, 2) = nBlue;
-        }
-    }
-
-    img.saveImage("saved img/noise.jpg");
-}
-
 bool choiceCheck(const string& choice) {
     vector<string> choices = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-                              "11", "12", "13", "14", "15", "17", "18"};
+                              "11", "12", "13", "14", "15", "16", "17"};
 
     for (const string& i : choices) {
         if (choice == i) {
@@ -1188,6 +1087,46 @@ void VerticalFlip(Image img, Image& flipImg) {
         }
     }
 }
+void frameAdd(Image& img, int FrameSize, int redcolor, int greencolor, int bluecolor) {
+    for (int x = 0; x < img.width; x++) {
+        for (int i = 0; i < 20; i++) {
+            for (int k=0;k<3;k++){
+                img(x,i,k) = 255;
+                img(x,img.height - 1 - i,k) = 255;
+            }
+        }
+    }
+    for (int x = 0; x < 20; x++) {
+        for (int i = 0; i < img.height; i++) {
+            for (int k=0;k<3;k++){
+
+                img(img.width-1-x,i,k) = 255;
+                img(x,i,k)=255;
+
+            }
+        }
+    }
+    //Right and left frame
+    for (int x = 0; x < img.width; x++) {
+        for (int i = 0; i < FrameSize; i++) {
+            for (int k=0;k<3;k++){
+                img(x,i,0) = redcolor;
+                img(x,img.height - 1 - i,1) = greencolor;
+                img(x,i,2)=bluecolor;
+            }
+        }
+    }
+    //Top and Bottom frame
+    for (int x = 0; x < FrameSize; x++) {
+        for (int i = 0; i < img.height; i++) {
+            for (int k=0;k<3;k++){
+                img(x,i,0) = redcolor;
+                img(img.width-1-x,i,1) = greencolor;
+                img(x,i,2)=bluecolor;
+            }
+        }
+    }
+}
 void imageResize(Image img, Image& rezImg, double wRatio, double hRatio) {
     double cWidth = 1.0 / wRatio;
     double cHeight = 1.0 / hRatio;
@@ -1280,6 +1219,61 @@ void InfraredLight(Image img, Image& infraredImg) {
             infraredImg(i, j, 0) = 255; // 0
             infraredImg(i, j, 1) = 255 - grayAvg; // grayAvg
             infraredImg(i, j, 2) = 255 - grayAvg; // grayAvg
+        }
+    }
+}
+void purpleColor(Image& img) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+
+            int nRed = -(img(i, j, 0)/8) + img(i, j, 0);
+            nRed *= 1.2;
+            if (nRed > 255) {
+                nRed = 255;
+            } // -10
+            else if (nRed < 0) {
+                nRed = 0;
+            }
+
+            int nGreen = -(img(i, j, 1)/3) + img(i, j, 1);
+            nGreen *= 1.2;
+            if (nGreen > 255) {
+                nGreen = 255;
+            } // -50
+            else if (nGreen < 0) {
+                nGreen = 0;
+            }
+
+            int nBlue = -(img(i, j, 2)/10) + img(i, j, 2);
+            nBlue *= 1.4;
+            if (nBlue > 255) {
+                nBlue = 255;
+            } // -10
+            else if (nBlue < 0) {
+                nBlue = 0;
+            }
+
+            img(i, j, 0) = nRed;
+            img(i, j, 1) = nGreen;
+            img(i, j, 2) = nBlue;
+        }
+    }
+}
+void skewImage(Image img, Image& skewImg, double angle, const string& direction) {
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            for (int k = 0; k < 3; k++) {
+                int new_i;
+                if (direction == "left") {
+                    new_i = (i + tan(angle) * img.height) - j * tan(angle);
+                } else {
+                    new_i = i + j * tan(angle);
+                }
+                if (new_i < 0) {
+                    new_i = 0;
+                }
+                skewImg(new_i, j, k) = img(i, j, k);
+            }
         }
     }
 }
